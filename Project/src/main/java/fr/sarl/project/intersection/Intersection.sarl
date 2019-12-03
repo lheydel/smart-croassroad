@@ -106,6 +106,6 @@ agent Intersection {
 			this.position = position
 			this.enteringRoadSection = roadSection
 			this.targetRoadSection = target
+		}
 	}
-}
 }
