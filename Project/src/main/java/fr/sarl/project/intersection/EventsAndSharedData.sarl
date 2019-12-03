@@ -1,9 +1,8 @@
 package fr.sarl.project.intersection
 
 import java.util.UUID
-//import java.util.concurrent.ConcurrentHashMap
-import org.eclipse.xtend.lib.annotations.Accessors
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
+import org.eclipse.xtend.lib.annotations.Accessors
 
 event Die
 
@@ -11,11 +10,43 @@ event Wait
 
 event Go
 
-class CarToFollowInTheIntersection {
+event JoinIntersection {
+	// Id of the car joining the intersection
+	var carId : UUID
+	
+	// Position of the car
+	var position : Vector2d
+	var roadSection : int
+	
+	// Targetted road section
+	var target : int
+	
+	new(carId : UUID, position : Vector2d, roadSection : int, target : int) {
+		this.carId = carId
+		this.position = position
+		this.roadSection = roadSection
+		this.target = target
+	}
+}
+
+event LeaveIntersection {
+	// Id of the car leaving the intersection
+	var carId : UUID
+	
+	new(car : UUID) {
+		carId = car
+	}
+}
+
+class CarBody {
 
 	// Position of the body
 	@Accessors
 	var position : Vector2d
+	
+	// Id of the current road section
+	@Accessors
+	var roadSection : int
 
 	// Address of the body's owner
 	@Accessors
@@ -23,16 +54,17 @@ class CarToFollowInTheIntersection {
 
 	// Agent's speed
 	@Accessors
-	var vitesse : Vector2d
+	var speed : Vector2d
 
 	// Acceleration
 	@Accessors
 	var acceleration : Vector2d
 	
-	new(iowner : UUID, iposition : Vector2d, ispeed : Vector2d) {
-		position = iposition
-		owner = iowner
-		vitesse = ispeed
+	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d) {
+		this.position = position
+		this.roadSection = roadSection
+		this.owner = owner
+		this.speed = speed
 		acceleration = new Vector2d
 	}
 	

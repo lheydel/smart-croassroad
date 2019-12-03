@@ -1,0 +1,111 @@
+/** 
+ * 
+ */
+package fr.sarl.project.intersection
+
+import io.sarl.core.Destroy
+import io.sarl.core.Initialize
+import io.sarl.core.Logging
+import java.util.HashMap
+import java.util.LinkedList
+import java.util.Map
+import java.util.Queue
+import java.util.UUID
+import org.arakhne.afc.math.geometry.d2.d.Vector2d
+import org.eclipse.xtend.lib.annotations.Accessors
+
+/** 
+ * @author louec
+ * 
+ */
+agent Intersection {
+	uses Logging
+
+	/** Cars currently in the context of the intersection */
+	val cars : Map<UUID, PerceivedCar> = new HashMap
+	
+	/** Waiting queues for each road section of the intersection */
+	val roadSections : Map<Integer, Queue<UUID>> = new HashMap
+
+	/**
+	 * Init parameters :
+	 * [0] Northen road section number
+	 * [1] Eastern
+	 * [2] Southern
+	 * [3] Western
+	 */
+	on Initialize {
+		// init waiting queues
+		for (var i = 0; i < 4; i++) {
+			roadSections.put(occurrence.parameters.get(i) as Integer, new LinkedList)
+		}
+		
+		info("Intersection created")
+	}
+
+	/** 
+	 * Triggered when a car joins the context of the intersection
+	 * Add the new car to the lists of known entities
+	 */
+	on JoinIntersection {
+		// save only the needed info
+		val car = new PerceivedCar(occurrence.carId, occurrence.position, occurrence.roadSection, occurrence.target)
+		
+		// store it
+		synchronized(cars) {
+			cars.put(car.id, car)
+		}
+		
+		// assign it to the right road section
+		val roadSection = roadSections.get(car.enteringRoadSection)
+		synchronized(roadSection) {
+			roadSection.add(car.id)
+		}
+	}
+
+	/** 
+	 * Triggered when a car leaves the context of the intersection
+	 * Remove the new car from the lists of known entities
+	 */
+	on LeaveIntersection { 
+		// remove the car from the storage
+		synchronized (cars) {
+			cars.remove(occurrence.carId)
+		}
+
+		// remove it from its road section
+		val roadSectionNumber = cars.get(occurrence.carId).enteringRoadSection
+		val roadSection = roadSections.get(roadSectionNumber) 
+		synchronized (roadSection) {
+			roadSection.remove(occurrence.carId)
+		}
+	}
+	
+	on Destroy {
+		info("Intersection destroyed")
+	}
+
+	static class PerceivedCar  {
+
+		@Accessors
+		val id : UUID
+
+		@Accessors
+		var position : Vector2d
+
+		// Id of the current road section
+		@Accessors
+		val enteringRoadSection : int
+
+		// Id of the targetted road section
+		@Accessors
+		val targetRoadSection : int
+
+		new(id : UUID, position : Vector2d, roadSection : int, target : int) {
+			this.id = id
+			this.position = position
+			this.enteringRoadSection = roadSection
+			this.targetRoadSection = target
+	}
+}
+}
