@@ -62,12 +62,12 @@ class IntersectionSimulation implements EventListener {
 	var height = Settings::EnvtHeight
 
 	/** 
-	 * Map buffering boids before launch/start
+	 * Map buffering cars before launch/start
 	 */
 	var carToLaunch : Map<List<Car>, Integer>
 
 	/** 
-	 * Map buffering boids' bodies before launch/start
+	 * Map buffering cars' bodies before launch/start
 	 */
 	var carBodies : ConcurrentHashMap<UUID, CarBody>
 
@@ -113,7 +113,7 @@ class IntersectionSimulation implements EventListener {
 	 * 
 	 * @param p - the population to add.
 	 */
-	def addBoid(p : List<Car>) : void {
+	def addCar(p : List<Car>) : void {
 		carCount++
 		if (!isSimulationStarted) {
 			var currentBoidCount = carToLaunch.get(p)
@@ -134,9 +134,9 @@ class IntersectionSimulation implements EventListener {
 
 		defaultSARLContext = kernel.startWithoutAgent
 
-		environment = kernel.startAgent(typeof(Intersection), height, width)
+		environment = kernel.startAgent(typeof(Environment), height, width)
 
-		launchAllBoids
+		launchAllCars
 		^space = defaultSARLContext.defaultSpace as OpenEventSpace
 
 		this.myGUI = new EnvironmentGui(^space, height, width, this.carBodies)
@@ -144,10 +144,10 @@ class IntersectionSimulation implements EventListener {
 		// Registering to receive GUIRepaint events
 		^space.register(this)
 		// Sending start to Environment
-		^space.emit(id, new Start(this.carBodies))
+		//^space.emit(id, new Start(this.carBodies))
 	}
 
-	private def launchAllBoids : void {
+	private def launchAllCars : void {
 		var carNum = 0
 		for (e : carToLaunch.entrySet) {
 			for (var i = 0; i < e.value; i++) {

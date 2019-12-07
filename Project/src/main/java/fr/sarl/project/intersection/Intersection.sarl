@@ -31,9 +31,9 @@ agent Intersection {
 	/**
 	 * Init parameters :
 	 * [0] Northen road section number
-	 * [1] Eastern
-	 * [2] Southern
-	 * [3] Western
+	 * [1] Western
+	 * [2] Eastern
+	 * [3] Southern
 	 */
 	on Initialize {
 		// init waiting queues
