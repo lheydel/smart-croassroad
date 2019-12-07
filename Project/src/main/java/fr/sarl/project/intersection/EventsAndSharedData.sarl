@@ -3,12 +3,17 @@ package fr.sarl.project.intersection
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.concurrent.ConcurrentHashMap
 
 event Die
 
 event Wait
 
 event Go
+
+event Action {
+	var influence : Vector2d
+}
 
 event JoinIntersection {
 	// Id of the car joining the intersection
@@ -28,6 +33,30 @@ event JoinIntersection {
 		this.target = target
 	}
 }
+
+/** 
+ * Event specifying when the GUI must be refreshed according to the new environmental state embodied by the specified map
+ * @author Victor Sonza
+ */
+event GuiRepaint {
+	val perceivedAgentBody : ConcurrentHashMap<UUID, CarBody>
+
+	new (bodies : ConcurrentHashMap<UUID, CarBody>) {
+		perceivedAgentBody = new ConcurrentHashMap<UUID, CarBody>(bodies);
+	}
+
+}
+
+event Start {
+	val perceivedAgentBody : ConcurrentHashMap<UUID, CarBody>
+
+	new (bodies : ConcurrentHashMap<UUID, CarBody>) {
+		perceivedAgentBody = new ConcurrentHashMap<UUID, CarBody>(bodies);
+	}
+
+}
+
+
 
 event LeaveIntersection {
 	// Id of the car leaving the intersection

@@ -13,6 +13,7 @@ import java.util.Queue
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
+import io.sarl.lang.core.Agent
 
 /** 
  * @author louec
@@ -30,9 +31,9 @@ agent Intersection {
 	/**
 	 * Init parameters :
 	 * [0] Northen road section number
-	 * [1] Eastern
-	 * [2] Southern
-	 * [3] Western
+	 * [1] Western
+	 * [2] Eastern
+	 * [3] Southern
 	 */
 	on Initialize {
 		// init waiting queues
