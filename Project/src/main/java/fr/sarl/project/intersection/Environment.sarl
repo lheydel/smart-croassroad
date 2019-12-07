@@ -26,11 +26,24 @@ agent Environment {
 	var height : int
 
 	@Accessors
-	var boids : ConcurrentHashMap<UUID, CarBody>
+	var cars : ConcurrentHashMap<UUID, CarBody>
 
 	// Set of boids ID who has sent their influence in the current time step
 	@Accessors
 	var influences : ConcurrentSkipListSet<UUID>
+
+	def addRandomNumberOfCar(min : int, max : int):void
+	{
+		var alea = (min + (Math.random() * ((max - min) + 1))).toInteger
+		var randomRoadSection = (Math.random()*(4)+1).toInteger
+		for (var i = 0; i < alea; i++)
+		{
+			
+			// new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
+			//var car : CarBody = new CarBody()
+		}
+			
+	}
 
 	on Initialize {
 		loggingName = "Environment"
@@ -43,15 +56,17 @@ agent Environment {
 			if (occurrence.parameters.get(1) instanceof Integer) {
 				width = occurrence.parameters.get(1) as Integer
 			}
-			boids = null
+			cars = null
+			
 			influences = new ConcurrentSkipListSet
 
 		}
 	}
 
-	on Start {
-		this.boids = occurrence.perceivedAgentBody
-		new GuiRepaint(boids).emit
+	on Start 
+	{
+		this.cars = occurrence.perceivedAgentBody
+		new GuiRepaint(cars).emit
 		//new Perception(boids).emit
 	}
 
@@ -60,7 +75,8 @@ agent Environment {
 		// TODO
 	}
 
-	on Die {
+	on Die 
+	{
 		killMe
 	}
 
