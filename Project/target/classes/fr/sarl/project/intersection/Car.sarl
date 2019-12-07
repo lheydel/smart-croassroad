@@ -76,7 +76,7 @@ agent Car {
 		
 	}
 
-	def follow(carToFollow : CarToFollowInTheIntersection) : Vector2d {
+	def follow(carToFollow : CarBody) : Vector2d {
 
 		if ((carToFollow !== null) && (carToFollow.owner != this.ID)) {
 			

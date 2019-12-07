@@ -13,6 +13,7 @@ import java.util.Queue
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
+import io.sarl.lang.core.Agent
 
 /** 
  * @author louec
