@@ -38,7 +38,7 @@ agent Car
 	 * [3] South
 	 * */
 	 
-	var group :Population
+	var group :Population // constant about cars
 		
 
 	on Initialize {
@@ -59,8 +59,11 @@ agent Car
 			
 		}
 		this.speed.length=0.0
+		//TODO initialize var
 		//this.position= ?????
 		//this.destination=????
+		//this.direction=???
+		// la position vas dependre de la position initial
 		
 	}
 
