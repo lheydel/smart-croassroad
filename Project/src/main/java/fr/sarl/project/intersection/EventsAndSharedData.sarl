@@ -34,6 +34,14 @@ event JoinIntersection {
 	}
 }
 
+event Perception {
+	val perceivedAgentBody : ConcurrentHashMap<UUID, CarBody>
+
+	new (bodies : ConcurrentHashMap<UUID, CarBody>) {
+		perceivedAgentBody = new ConcurrentHashMap<UUID, CarBody>(bodies);
+	}
+}
+
 /** 
  * Event specifying when the GUI must be refreshed according to the new environmental state embodied by the specified map
  * @author Victor Sonza

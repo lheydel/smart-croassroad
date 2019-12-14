@@ -30,6 +30,7 @@ agent Car
 	var speed : Vector2d
 	var acceleration : Double
 	var destination : Vector2d
+	var group :Population
 		
 
 	on Initialize {
@@ -39,6 +40,19 @@ agent Car
 		//TODO Code to Initialize the car
 		
 		info("The agent was started.")
+		if (occurrence.parameters.size > 1) {
+			if (occurrence.parameters.get(0) instanceof UUID) {
+				environment = occurrence.parameters.get(0) as UUID
+			}
+			if (occurrence.parameters.get(1) instanceof Population) {
+				group = occurrence.parameters.get(1) as Population
+				this.acceleration = group.maxAcc
+			}
+			
+		}
+		this.speed.length=0.0
+		//this.position= ?????
+		
 	}
 
 	on Destroy {
@@ -67,6 +81,8 @@ agent Car
 	on Wait {
 		
 		//TODO Code for when the car need to wait
+		speed.set(0.0,0.0)
+		//TODO define a deceleration
 		
 	}	
 	
@@ -74,6 +90,9 @@ agent Car
 		
 		//TODO Code for when the car can go
 		
+	}
+	on Perception{
+		//TODO code to ajuste  car's speed and acceleration depending of other cars 
 	}
 
 	def follow(carToFollow : CarBody) : Vector2d {
@@ -84,6 +103,19 @@ agent Car
 			
 		}
 
+	}
+	def acceleration  {
+		
+		if (this.speed.length <= group.maxSpeed ){
+			this.speed.length =(this.speed.length+acceleration)
+			}
+	}
+
+	def decceleration {
+
+		if (this.speed.length <0.0) {
+			this.speed.length = (this.speed.length - acceleration)
+		}
 	}
 
 }

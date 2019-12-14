@@ -27,6 +27,8 @@ agent Environment {
 
 	@Accessors
 	var cars : ConcurrentHashMap<UUID, CarBody>
+	
+	
 
 	// Set of boids ID who has sent their influence in the current time step
 	@Accessors
