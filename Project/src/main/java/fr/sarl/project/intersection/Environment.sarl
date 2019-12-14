@@ -1,0 +1,83 @@
+package fr.sarl.project.intersection
+
+import io.sarl.core.DefaultContextInteractions
+import io.sarl.core.Initialize
+import io.sarl.core.Logging
+import io.sarl.core.Schedules
+import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentSkipListSet
+import org.arakhne.afc.math.geometry.d2.d.Vector2d
+import org.eclipse.xtend.lib.annotations.Accessors
+import io.sarl.core.Lifecycle
+
+/** 
+ * The environmental agent in charge of collecting boids influences and computing the new state of the virtual world
+ * @author Nicolas Gaud
+ */
+agent Environment {
+
+	uses Logging, DefaultContextInteractions, Schedules, Lifecycle
+
+	@Accessors
+	var width : int
+
+	@Accessors
+	var height : int
+
+	@Accessors
+	var cars : ConcurrentHashMap<UUID, CarBody>
+
+	// Set of boids ID who has sent their influence in the current time step
+	@Accessors
+	var influences : ConcurrentSkipListSet<UUID>
+
+	def addRandomNumberOfCar(min : int, max : int):void
+	{
+		var alea = (min + (Math.random() * ((max - min) + 1))).toInteger
+		var randomRoadSection = (Math.random()*(4)+1).toInteger
+		for (var i = 0; i < alea; i++)
+		{
+			
+			// new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
+			//var car : CarBody = new CarBody()
+		}
+			
+	}
+
+	on Initialize {
+		loggingName = "Environment"
+		// Environment init parameters : An Integer the grid's height, An integer the grid's width
+		if (occurrence.parameters.size > 1) {
+			if (occurrence.parameters.get(0) instanceof Integer) {
+				height = occurrence.parameters.get(0) as Integer
+			}
+
+			if (occurrence.parameters.get(1) instanceof Integer) {
+				width = occurrence.parameters.get(1) as Integer
+			}
+			cars = null
+			
+			influences = new ConcurrentSkipListSet
+
+		}
+	}
+
+	on Start 
+	{
+		this.cars = occurrence.perceivedAgentBody
+		new GuiRepaint(cars).emit
+		//new Perception(boids).emit
+	}
+
+	on Action 
+	{
+		// TODO
+	}
+
+	on Die 
+	{
+		killMe
+	}
+
+}

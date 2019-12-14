@@ -18,7 +18,8 @@ import org.arakhne.afc.math.geometry.d2.d.Vector2d
  * @author ASaunier
  * 
  */
-agent Car {
+agent Car 
+{
 	uses Logging, DefaultContextInteractions, Schedules, Lifecycle
 	
 	// ID of the environmental agent
@@ -30,7 +31,6 @@ agent Car {
 	var acceleration : Double
 	var destination : Vector2d
 		
-	
 
 	on Initialize {
 		// Event trigger before the agent begin to live or to be used.
@@ -76,7 +76,7 @@ agent Car {
 		
 	}
 
-	def follow(carToFollow : CarToFollowInTheIntersection) : Vector2d {
+	def follow(carToFollow : CarBody) : Vector2d {
 
 		if ((carToFollow !== null) && (carToFollow.owner != this.ID)) {
 			

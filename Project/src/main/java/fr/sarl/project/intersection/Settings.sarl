@@ -1,0 +1,34 @@
+package fr.sarl.project.intersection
+
+/** 
+ * General configuration of the car simulation.
+ * 
+ * @author Victor Sonza
+ */
+interface Settings {
+
+		/**
+     * Environmental grid default width
+		 */
+	public static val EnvtWidth = 1000
+
+	/** 
+	 * Environmental grid default height
+	 */
+	public static val EnvtHeight = 1000
+
+	/** 
+	 * Boolean specifying whether message logs are activated or not
+	 */
+	public static val isLogActivated = false
+	
+	public static val numberOfIntersection = 1
+	
+	public static val numberOfLanes = numberOfIntersection*4
+
+	/** 
+	 * Specify a pause delay before each car sends his influence to the environment, and respectively before the environment sends perceptions to cars
+	 */
+	public static val pause = 0
+
+}
