@@ -41,8 +41,27 @@ agent Intersection {
 	 */
 	on Initialize 
 	{
+		
+	/*
+		// VOIE A (au milieu en haut)
+		drawDashedLine(myCanvas, 500, 0, 500, 400)
+		drawStopLine(myCanvas, 401, 399, 499, 399)
+	
+		// VOIE B (au centre à gauche)
+		drawDashedLine(myCanvas, 0, 500, 400, 500)
+		drawStopLine(myCanvas, 398, 500, 398, 598)
+	
+		// VOIE C (au centre à droite)
+		drawDashedLine(myCanvas, 600, 500, 1000, 500)
+		drawStopLine(myCanvas, 601, 498, 601, 401)
+	
+		// VOIE D (au milieu en bas)
+		drawDashedLine(myCanvas, 500, 600, 500, 1000)
+		drawStopLine(myCanvas, 501, 601, 598, 601) */
+
 		// init waiting queues
-		for (var i = 0; i < 4; i++) {
+		for (var i = 0; i < 4; i++) 
+		{
 			roadSections.put(occurrence.parameters.get(i) as Integer, new LinkedList)
 		}
 		
