@@ -1,0 +1,56 @@
+/** 
+ * 
+ */
+package fr.sarl.project.intersection
+
+import org.arakhne.afc.math.geometry.d2.d.Vector2d
+import java.util.ArrayList
+import org.eclipse.xtend.lib.annotations.Accessors
+
+/** 
+ * @author El Popcorn
+ * 
+ */
+class RoadSection extends Object 
+{
+	@Accessors
+	var numsection : int
+
+	@Accessors
+	var positionNorthWest : Vector2d
+
+	@Accessors
+	var positionSouthEast : Vector2d
+	
+
+	new 
+	{
+		numsection = -1
+
+		this.positionNorthWest = new Vector2d(-1, -1)
+		
+		this.positionSouthEast = new Vector2d(-1, -1)
+	}
+	
+	new(numS : int,posNW : Vector2d, posSE: Vector2d,c : ArrayList<CarBody>)
+	{
+		numsection = numS
+
+		this.positionNorthWest = posNW
+		this.positionSouthEast = posSE
+	}
+
+
+	// Check if the position is in my road Section return true if it's the case, otherwise returns false
+	def isInRoadSection(carPosition : Vector2d) : boolean
+	{
+		var xOk : boolean = false
+		var yOk : boolean = false
+		
+		xOk = carPosition.x>this.positionNorthWest.x && carPosition.x<positionSouthEast.x
+		yOk = carPosition.y>this.positionNorthWest.y && carPosition.y<positionSouthEast.y
+		
+		return xOk && yOk 
+	}
+
+}

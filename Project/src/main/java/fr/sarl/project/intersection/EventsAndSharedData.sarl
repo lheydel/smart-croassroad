@@ -4,6 +4,7 @@ import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.concurrent.ConcurrentHashMap
+import java.util.ArrayList
 
 event Die
 
@@ -96,5 +97,19 @@ class CarBody {
 		this.speed = speed
 		acceleration = new Vector2d
 	}
+	
+}
+
+class IntersectionBody
+{
+	@Accessors
+	var owner : UUID
+	
+	// List of the road sections
+	@Accessors
+	var roadSections : ArrayList<RoadSection>
+	
+	@Accessors
+	var intersectionCenter : IntersectionCenter
 	
 }
