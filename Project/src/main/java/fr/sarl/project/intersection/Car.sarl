@@ -30,6 +30,14 @@ agent Car
 	var speed : Vector2d
 	var acceleration : Double
 	var destination : Vector2d
+	var direction : int
+	/* Init parameters :
+	 * [0] North
+	 * [1] West
+	 * [2] East
+	 * [3] South
+	 * */
+	 
 	var group :Population
 		
 
@@ -52,6 +60,7 @@ agent Car
 		}
 		this.speed.length=0.0
 		//this.position= ?????
+		//this.destination=????
 		
 	}
 
@@ -105,16 +114,44 @@ agent Car
 
 	}
 	def acceleration  {
+		//acceleration linéaire en fonction de la direction du véhicule 
 		
-		if (this.speed.length <= group.maxSpeed ){
-			this.speed.length =(this.speed.length+acceleration)
+			if (direction == 1 && this.speed.x <= group.maxSpeed) {
+				this.speed.setX(this.speed.getX + acceleration)
+				this.speed.setY(0)
 			}
+			else if (direction == 2 && this.speed.y >= -group.maxSpeed) {
+				this.speed.setY(this.speed.getY - acceleration)
+				this.speed.setX(0)
+			} 
+			else if (direction == 3 && this.speed.y <= group.maxSpeed) {
+				this.speed.setY(this.speed.getY + acceleration)
+				this.speed.setX(0)
+			} 
+			else if (direction == 4 && this.speed.x >= -group.maxSpeed) {
+				this.speed.setX(this.speed.getX - acceleration)
+				this.speed.setY(0)
+			}
+			else{
+				info("error direction acceleration ")
+			}
+		
 	}
 
 	def decceleration {
-
-		if (this.speed.length <0.0) {
-			this.speed.length = (this.speed.length - acceleration)
+		// decceleration linéaire en fonction de la direction du véhicule
+		if (this.speed.length < 0.0) {
+			if (direction == 1 && this.speed.x >= 0.0) {
+				this.speed.setX(this.speed.getX - acceleration)
+			} else if (direction == 2 && this.speed.y<=0.0) {
+				this.speed.setY(this.speed.getY +acceleration)
+			} else if (direction == 3 && this.speed.y>=0.0) {
+				this.speed.setY(this.speed.getY - acceleration)
+			} else if (direction == 4 && this.speed.y<=0.0) {
+				this.speed.setX(this.speed.getX + acceleration)
+			} else {
+				info("error direction decceleration")
+			}
 		}
 	}
 
