@@ -226,7 +226,7 @@ package class EnvironmentGuiPanel extends Panel {
 
 	// Self explanatory
 	// We could get some inspiration from that to draw our cars
-	def paintBoid(g : Graphics, car : CarBody) 
+	def paintCar(g : Graphics, car : CarBody) 
 	{
 		var posX = width + car.position.x as int
 		var posY = height + car.position.y as int

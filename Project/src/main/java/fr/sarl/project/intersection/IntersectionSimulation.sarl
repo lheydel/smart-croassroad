@@ -144,7 +144,7 @@ class IntersectionSimulation implements EventListener {
 		// Registering to receive GUIRepaint events
 		^space.register(this)
 		// Sending start to Environment
-		//^space.emit(id, new Start(this.carBodies))
+		^space.emit(id, new Start(this.carBodies))
 	}
 
 	private def launchAllCars : void {
