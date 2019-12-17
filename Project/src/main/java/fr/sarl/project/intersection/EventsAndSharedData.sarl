@@ -97,13 +97,17 @@ class CarBody {
 	// Acceleration
 	@Accessors
 	var acceleration : Vector2d
+	//direction
+	@Accessors
+	var direction : int
 	
-	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d) {
+	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d, dir : int) {
 		this.position = position
 		this.roadSection = roadSection
 		this.owner = owner
 		this.speed = speed
 		acceleration = new Vector2d
+		this.direction =dir
 	}
 	
 }

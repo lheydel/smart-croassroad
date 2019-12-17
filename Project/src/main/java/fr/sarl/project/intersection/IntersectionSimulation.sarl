@@ -165,7 +165,7 @@ class IntersectionSimulation implements EventListener {
 		var b = kernel.startAgent(typeof(Car), environment, p, initialPosition, initialVitesse, boidName)
 		
 		// 	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
-		this.carBodies.put(b, new CarBody(environment, initialPosition,0,initialVitesse))
+		this.carBodies.put(b, new CarBody(environment, initialPosition,0,initialVitesse,1))
 
 		if (Settings::isLogActivated) {
 			System.out.println("Lancement d'une car à la position " + initialPosition + " et avec une vitesse de " +
