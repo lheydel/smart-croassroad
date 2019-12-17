@@ -13,6 +13,7 @@ import io.sarl.core.Schedules
 import io.sarl.core.Lifecycle
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
+import java.util.Collection
 
 /** 
  * @author ASaunier
@@ -200,5 +201,10 @@ agent Car
 		}
 		
 	}
+
+	def think(perception : Collection<CarBody>) : Vector2d {
+		if (perception !== null) {}
+		
+		}
 
 }
