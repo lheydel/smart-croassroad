@@ -61,17 +61,6 @@ class IntersectionSimulation implements EventListener {
 
 	var height = Settings::EnvtHeight
 
-	/** 
-	 * Map buffering cars before launch/start
-	 */
-	var carToLaunch : Map<List<Car>, Integer>
-
-	/** 
-	 * Map buffering cars' bodies before launch/start
-	 */
-	var carBodies : ConcurrentHashMap<UUID, CarBody>
-
-	var carCount : int
 
 	/** 
 	 * Boolean specifying id the simulation is started or not.
@@ -85,22 +74,13 @@ class IntersectionSimulation implements EventListener {
 	 */
 	var ^space : OpenEventSpace
 
-	/** 
-	 * The Graphical user interface
-	 */
-	var myGUI : EnvironmentGui
 
 	new {
-		carCount = 0
-
-		this.carBodies = new ConcurrentHashMap
-
-		carToLaunch = newHashMap
 	}
 
 	def start : void {
-		launchAllAgents
 		isSimulationStarted = true
+		launchEnvironment
 	}
 
 	def stop : void {
@@ -108,70 +88,23 @@ class IntersectionSimulation implements EventListener {
 		isSimulationStarted = false
 	}
 
-	/** 
-	 * Add the boids of a population to the simulation.
-	 * 
-	 * @param p - the population to add.
-	 */
-	def addCar(p : List<Car>) : void {
-		carCount++
-		if (!isSimulationStarted) {
-			var currentBoidCount = carToLaunch.get(p)
-			if (currentBoidCount !== null) {
-				currentBoidCount++
-			} else {
-				currentBoidCount = new Integer(1)
-			}
-			carToLaunch.put(p, currentBoidCount)
-		} else {
-			launchCar(p, "Car" + carCount)
-		}
-	}
+	
 
-	private def launchAllAgents : void {
+	private def launchEnvironment : void {
 
 		kernel = SRE::getBootstrap
 
 		defaultSARLContext = kernel.startWithoutAgent
 
-		environment = kernel.startAgent(typeof(Environment), height, width)
+		environment = kernel.startAgent(typeof(Environment), height, width,kernel)
 
-		launchAllCars
 		^space = defaultSARLContext.defaultSpace as OpenEventSpace
-
-		this.myGUI = new EnvironmentGui(^space, height, width, this.carBodies)
 
 		// Registering to receive GUIRepaint events
 		^space.register(this)
-		// Sending start to Environment
-		^space.emit(id, new Start(this.carBodies))
+
 	}
 
-	private def launchAllCars : void {
-		var carNum = 0
-		for (e : carToLaunch.entrySet) {
-			for (var i = 0; i < e.value; i++) {
-				carNum++
-				e.key.launchCar("Car " + carNum)
-			}
-		}
-	}
-
-	@SuppressWarnings("constant_condition", "discouraged_reference")
-	private def launchCar(p : List<Car>, boidName : String) : void {
-		var initialPosition = new Vector2d((Math::random - 0.5) * width, (Math::random - 0.5) * height)
-		var initialVitesse = new Vector2d(Math::random - 0.5, Math::random - 0.5)
-
-		var b = kernel.startAgent(typeof(Car), environment, p, initialPosition, initialVitesse, boidName)
-		
-		// 	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
-		this.carBodies.put(b, new CarBody(environment, initialPosition,0,initialVitesse))
-
-		if (Settings::isLogActivated) {
-			System.out.println("Lancement d'une car à la position " + initialPosition + " et avec une vitesse de " +
-				initialVitesse)
-		}
-	}
 
 	private def killAllAgents : void {
 		// do something if you want to
@@ -180,15 +113,9 @@ class IntersectionSimulation implements EventListener {
 	override getID : UUID {
 		id
 	}
+	
+	def receiveEvent(^event : Event) {
 
-	/** 
-	 * Methods managing event coming from agents 
-	 */
-	override receiveEvent(^event : Event) {
-		if (^event instanceof GuiRepaint) { // event from the environment, GUI must be refreshed
-			this.myGUI.cars = ^event.perceivedAgentBody
-			this.myGUI.repaint
-		}
 	}
-
+	
 }
