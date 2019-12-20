@@ -13,35 +13,44 @@ import java.util.Queue
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
-import io.sarl.lang.core.Agent
 
 /** 
  * @author louec
  * 
  */
 agent Intersection {
-	uses Logging
-
+	uses Logging, RoadCrossing
+	
 	/** Cars currently in the context of the intersection */
 	val cars : Map<UUID, PerceivedCar> = new HashMap
 	
 	/** Waiting queues for each road section of the intersection */
 	val roadSections : Map<Integer, Queue<UUID>> = new HashMap
+	val roadSectionIds : int[] = #[-1, -1, -1, -1]
+
+	val crossingSquareReservations : UUID[] = #[null, null, null, null]
+	val SQUARE_NE = 0
+	val SQUARE_NW = 1
+	val SQUARE_SW = 2
+	val SQUARE_SE = 3
 
 	/**
 	 * Init parameters :
-	 * [0] Northen road section number
+	 * [0-3] Road section numbers (/!\ before changing sending order, update "position" in enum CrossroadDirection /!\)
+	 * [0] Northern
 	 * [1] Western
 	 * [2] Eastern
 	 * [3] Southern
 	 */
-	on Initialize {
+	on Initialize {		
+		setSkill(new RoadCrossingSkill)
+		
 		// init waiting queues
 		for (var i = 0; i < 4; i++) {
-			roadSections.put(occurrence.parameters.get(i) as Integer, new LinkedList)
+			var id = occurrence.parameters.get(i) as Integer
+			roadSections.put(id, new LinkedList)
+			roadSectionIds.set(i, id)
 		}
-		
-		info("Intersection created")
 	}
 
 	/** 
@@ -69,16 +78,16 @@ agent Intersection {
 	 * Remove the new car from the lists of known entities
 	 */
 	on LeaveIntersection { 
-		// remove the car from the storage
-		synchronized (cars) {
-			cars.remove(occurrence.carId)
-		}
-
-		// remove it from its road section
+		// remove the car from its road section
 		val roadSectionNumber = cars.get(occurrence.carId).enteringRoadSection
 		val roadSection = roadSections.get(roadSectionNumber) 
 		synchronized (roadSection) {
 			roadSection.remove(occurrence.carId)
+		}
+		
+		// remove the car from the storage
+		synchronized (cars) {
+			cars.remove(occurrence.carId)
 		}
 	}
 	
@@ -86,6 +95,46 @@ agent Intersection {
 		info("Intersection destroyed")
 	}
 
+
+	/**
+	 * Check if the path from one direction to another is not yet reserved
+	 * @return true if the path is free, false else
+	 */
+	def isPathFree(from : CrossroadDirection, to : CrossroadDirection) : boolean {
+		val path = from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
+		var isFree = true
+
+		synchronized (crossingSquareReservations) {
+			for (square : path) {
+				isFree = isFree && crossingSquareReservations.get(square) === null
+			}
+		}
+
+		return isFree
+	}
+
+	/** 
+	 * Reserve the path from one direction to another for a given car
+	 */
+	def lockPath(from : CrossroadDirection, to : CrossroadDirection, reserver : UUID) {
+		val path = from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
+
+		synchronized (crossingSquareReservations) {
+			for (square : path) {
+				crossingSquareReservations.set(square, reserver)
+			}
+		}
+	}
+
+	def unlockSquare(square : int) {
+		synchronized (crossingSquareReservations) {
+			crossingSquareReservations.set(square, null)
+		}
+	}
+
+	/** 
+	 * Minimalization of a CarBody with only the required information for the Intersection
+	 */
 	static class PerceivedCar  {
 
 		@Accessors
