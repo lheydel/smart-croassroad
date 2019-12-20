@@ -19,7 +19,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
  * 
  */
 agent Intersection {
-	uses Logging, RoadCrossing
+	uses Logging
 	
 	/** Cars currently in the context of the intersection */
 	val cars : Map<UUID, PerceivedCar> = new HashMap
@@ -43,8 +43,6 @@ agent Intersection {
 	 * [3] Southern
 	 */
 	on Initialize {		
-		setSkill(new RoadCrossingSkill)
-		
 		// init waiting queues
 		for (var i = 0; i < 4; i++) {
 			var id = occurrence.parameters.get(i) as Integer
