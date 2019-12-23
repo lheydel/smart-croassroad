@@ -23,7 +23,7 @@ event JoinIntersection {
 	var position : Vector2d
 	var roadSection : int
 	
-	// Targetted road section
+	// Targeted road section
 	var target : int
 	
 	new(carId : UUID, position : Vector2d, roadSection : int, target : int) {
