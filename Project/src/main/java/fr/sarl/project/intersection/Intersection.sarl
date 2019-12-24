@@ -5,7 +5,9 @@ package fr.sarl.project.intersection
 
 import io.sarl.core.Destroy
 import io.sarl.core.Initialize
+import io.sarl.core.Lifecycle
 import io.sarl.core.Logging
+import java.util.ArrayList
 import java.util.HashMap
 import java.util.LinkedList
 import java.util.Map
@@ -19,10 +21,14 @@ import org.eclipse.xtend.lib.annotations.Accessors
  * 
  */
 agent Intersection {
-	uses Logging
+	uses Logging, Lifecycle
 	
 	/** Cars currently in the context of the intersection */
 	val cars : Map<UUID, PerceivedCar> = new HashMap
+	
+	/** The road sections in our intersection */
+	@Accessors
+	val containerRoadSections : ArrayList<RoadSection> = newArrayList
 	
 	/** Waiting queues for each road section of the intersection */
 	val roadSections : Map<Integer, Queue<UUID>> = new HashMap
@@ -49,6 +55,8 @@ agent Intersection {
 			roadSections.put(id, new LinkedList)
 			roadSectionIds.set(i, id)
 		}
+		
+		info("Intersection created")
 	}
 
 	/** 
@@ -93,7 +101,6 @@ agent Intersection {
 		info("Intersection destroyed")
 	}
 
-
 	/**
 	 * Check if the path from one direction to another is not yet reserved
 	 * @return true if the path is free, false else
@@ -128,6 +135,9 @@ agent Intersection {
 		synchronized (crossingSquareReservations) {
 			crossingSquareReservations.set(square, null)
 		}
+	}
+	on Die 	{
+		killMe
 	}
 
 	/** 

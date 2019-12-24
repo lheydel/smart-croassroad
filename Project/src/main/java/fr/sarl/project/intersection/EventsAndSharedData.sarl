@@ -4,6 +4,9 @@ import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.concurrent.ConcurrentHashMap
+import java.util.ArrayList
+import java.util.Map
+import java.util.HashMap
 
 event Die
 
@@ -39,10 +42,10 @@ event JoinIntersection {
  * @author Victor Sonza
  */
 event GuiRepaint {
-	val perceivedAgentBody : ConcurrentHashMap<UUID, CarBody>
+	val perceivedAgentBody : ConcurrentHashMap<UUID, IntersectionBody>
 
-	new (bodies : ConcurrentHashMap<UUID, CarBody>) {
-		perceivedAgentBody = new ConcurrentHashMap<UUID, CarBody>(bodies);
+	new (bodies : ConcurrentHashMap<UUID, IntersectionBody>) {
+		perceivedAgentBody = new ConcurrentHashMap<UUID, IntersectionBody>(bodies);
 	}
 
 }
@@ -75,7 +78,7 @@ class CarBody {
 	
 	// Id of the current road section
 	@Accessors
-	var roadSection : int
+	var roadSection : int // Peut être modifier ça, de manière à ce que la car demande à l'environnement sa road section ???
 
 	// Address of the body's owner
 	@Accessors
@@ -95,6 +98,53 @@ class CarBody {
 		this.owner = owner
 		this.speed = speed
 		acceleration = new Vector2d
+	}
+	
+}
+
+class IntersectionBody
+{
+	@Accessors
+	var owner : UUID
+	
+	// List of the road sections
+	@Accessors
+	var roadSections : ArrayList<RoadSection>
+	
+	@Accessors
+	var intersectionCenter : IntersectionCenter
+	
+	new(o: UUID)
+	{
+		this.owner = o // new(numS : int,posNW : Vector2d, posSE: Vector2d,w : int,l:int, c: ArrayList<CarBody>)
+		var w = 100
+		var l = 400
+
+		var r1 = new RoadSection(1, new Vector2d(400, 0), new Vector2d(500, 400), w, l, new ArrayList<CarBody>())
+		var r2 = new RoadSection(2, new Vector2d(0, 500), new Vector2d(400, 600), w, l, new ArrayList<CarBody>())
+		var r3 = new RoadSection(3, new Vector2d(600, 400), new Vector2d(1000, 500), w, l, new ArrayList<CarBody>())
+		var r4 = new RoadSection(4, new Vector2d(500, 600), new Vector2d(600, 1000), w, l, new ArrayList<CarBody>())
+
+		roadSections = newArrayList
+		roadSections.add(r1)
+		roadSections.add(r2)
+		roadSections.add(r3)
+		roadSections.add(r4)
+	}
+	
+	
+	def getCars() :HashMap<UUID, CarBody>
+	{
+		var res : HashMap<UUID, CarBody> = new HashMap<UUID, CarBody>()
+		for(r : roadSections)
+		{
+			for (cb : r.waitingList)
+			{
+				res.put(cb.owner,cb)
+			}
+		}
+		
+		return res
 	}
 	
 }

@@ -34,12 +34,14 @@ import java.util.Map
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 
+import java.util.ArrayList
 import
 
 static extension java.lang.Math.*
 import java.awt.Graphics2D
 import java.awt.Stroke
 import java.awt.BasicStroke
+import fr.sarl.project.intersection.IntersectionBody
 
 /** 
  * Graphical user interface for intersections.
@@ -52,10 +54,10 @@ class EnvironmentGui extends Frame {
 
 	var panel : EnvironmentGuiPanel
 
-	new (comspace : OpenEventSpace, iheight : int, iwidth : int, icars : Map<UUID, CarBody>) {
+	new (comspace : OpenEventSpace, iheight : int, iwidth : int, iIntersections : ArrayList<IntersectionBody>) {
 		super()
 		handler = new Closer(this, comspace)
-		panel = new EnvironmentGuiPanel(iheight, iwidth,icars)
+		panel = new EnvironmentGuiPanel(iheight, iwidth,iIntersections)
 
 		this.title = "Intersection Simulation"
 		this.resizable = false
@@ -70,9 +72,10 @@ class EnvironmentGui extends Frame {
 		this.visible = true
 	}
 
-	def setCars(cars : Map<UUID, CarBody>) {
+/*
+	def setCars(intersections : ArrayList<IntersectionBody>) {
 		this.panel.cars = cars
-	}
+	}*/
 
 	override paint(g : Graphics) {
 		super.paint(g)
@@ -126,17 +129,31 @@ package class EnvironmentGuiPanel extends Panel {
 
 	var height : int
 
+	var intersections : ArrayList<IntersectionBody>
+
 	var cars : Map<UUID, CarBody>
 
 	def setCars(cars : Map<UUID, CarBody>) {
 		this.cars = cars
 	}
 
-	new (iheight : int, iwidth : int, icars : Map<UUID,CarBody>) {
+	new (iheight : int, iwidth : int, iIntersections : ArrayList<IntersectionBody>) {
 		super()
 		width = iwidth
 		height = iheight
-		cars = icars
+		intersections = iIntersections
+		cars = newHashMap
+		if(intersections !== null)
+		{
+			for (i : intersections) {
+				var tmpCars = i.getCars
+				if (tmpCars !== null)
+				{
+					cars.putAll(tmpCars)	
+				}
+				
+			}
+		}
 	}
 
 	override paint(g : Graphics) {
@@ -171,7 +188,13 @@ package class EnvironmentGuiPanel extends Panel {
 			drawDashedLine(myCanvas, 500, 600, 500, 1000)
 			drawStopLine(myCanvas, 501, 601, 598, 601)
 
-			//
+			// Painting the cars
+			if(cars!==null)
+			{
+				for (car : cars.values) {
+					paintCar(myCanvas, car)
+				}
+			}
 
 			/* for (boid : boids.values) {
 			 * paintBoid(myCanvas, boid)
@@ -226,24 +249,25 @@ package class EnvironmentGuiPanel extends Panel {
 
 	// Self explanatory
 	// We could get some inspiration from that to draw our cars
-	def paintBoid(g : Graphics, car : CarBody) 
+	def paintCar(g : Graphics, car : CarBody) 
 	{
-		var posX = width + car.position.x as int
-		var posY = height + car.position.y as int
+		var posX = car.position.x as int
+		var posY =car.position.y as int
 		var direction = car.speed.angle
 		var cos = direction.cos
 		var sin = direction.sin
 
-		
+		g.color = Color.BLACK
+	
 
-		//g.color = car.group.color
+		// g.drawLine(StartX,StartY,endX,EndY)
 
-//		g.drawLine(posX + ( 5 * cos ) as int, posY + ( 5 * sin ) as int, posX - ( 2 * cos + 2 * sin ) as int,
-//			posY - ( 2 * sin - 2 * cos ) as int)
-//		g.drawLine(posX + ( 5 * cos ) as int, posY + ( 5 * sin ) as int, posX - ( 2 * cos - 2 * sin ) as int,
-//			posY - ( 2 * sin + 2 * cos ) as int)
-//		g.drawLine(posX - ( 2 * cos + 2 * sin ) as int, posY - ( 2 * sin - 2 * cos ) as int,
-//			posX - ( 2 * cos - 2 * sin ) as int, posY - ( 2 * sin + 2 * cos ) as int)
+		g.drawLine(posX + ( 15 * cos ) as int, posY + ( 15 * sin ) as int, posX - ( 12 * cos + 12 * sin ) as int,
+			posY - ( 12 * sin -12 * cos ) as int)
+		g.drawLine(posX + ( 15 * cos ) as int, posY + ( 15 * sin ) as int, posX - ( 12 * cos - 12 * sin ) as int,
+			posY - ( 12 * sin + 12 * cos ) as int)
+		g.drawLine(posX - ( 12 * cos + 12 * sin ) as int, posY - ( 12 * sin - 12 * cos ) as int,
+			posX - ( 12 * cos - 12 * sin ) as int, posY - ( 12 * sin + 12 * cos ) as int)
 	}
 
 	private static def getAngle(v : Vector2d) : double {

@@ -20,6 +20,7 @@ class IntersectionSimulationLauncher
 		// 3 populations of boids (Red, Green and Blue)
 		var simu = new IntersectionSimulation
 		
+		//simu.addCar()
 //		var pRed = new Population(Color::RED)
 //		var pGreen = new Population(Color::GREEN)
 //		var pBlue = new Population(Color::BLUE)
