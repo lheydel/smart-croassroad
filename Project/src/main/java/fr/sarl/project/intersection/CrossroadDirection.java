@@ -179,4 +179,12 @@ public enum CrossroadDirection {
 	private CrossroadDirection(int pos) {
 		position = pos;
 	}
+	
+	public static CrossroadDirection fromPosition(int pos) {
+		return pos == NORTH.position ? NORTH
+			   : pos == SOUTH.position ? SOUTH
+			   : pos == EAST.position ? EAST
+			   : pos == WEST.position ? WEST
+			   : null;
+	}
 }

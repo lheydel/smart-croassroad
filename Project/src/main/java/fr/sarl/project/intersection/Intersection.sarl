@@ -3,15 +3,19 @@
  */
 package fr.sarl.project.intersection
 
+import io.sarl.core.DefaultContextInteractions
 import io.sarl.core.Destroy
 import io.sarl.core.Initialize
 import io.sarl.core.Lifecycle
 import io.sarl.core.Logging
+import io.sarl.core.Schedules
 import java.util.ArrayList
-import java.util.HashMap
+import java.util.Date
 import java.util.LinkedList
 import java.util.Map
+import java.util.PriorityQueue
 import java.util.Queue
+import java.util.TreeMap
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
@@ -21,17 +25,17 @@ import org.eclipse.xtend.lib.annotations.Accessors
  * 
  */
 agent Intersection {
-	uses Logging, Lifecycle
+	uses Logging, Lifecycle, Schedules, DefaultContextInteractions
 	
 	/** Cars currently in the context of the intersection */
-	val cars : Map<UUID, PerceivedCar> = new HashMap
+	val cars : Map<UUID, PerceivedCar> = new TreeMap
 	
 	/** The road sections in our intersection */
 	@Accessors
 	val containerRoadSections : ArrayList<RoadSection> = newArrayList
 	
 	/** Waiting queues for each road section of the intersection */
-	val roadSections : Map<Integer, Queue<UUID>> = new HashMap
+	val roadSections : Map<Integer, Queue<UUID>> = new TreeMap
 	val roadSectionIds : int[] = #[-1, -1, -1, -1]
 
 	val crossingSquareReservations : UUID[] = #[null, null, null, null]
@@ -57,6 +61,116 @@ agent Intersection {
 		}
 		
 		info("Intersection created")
+		
+		every(500) [
+			manageCrossroad
+		]
+	}
+	
+	/**
+	 * Overall management of the crossroad
+	 */
+	def manageCrossroad () {
+		val waitingCars : PriorityQueue<PerceivedCar> = waitingCarsByEnteringOrder
+		
+		while (waitingCars.peek !== null) {
+			var car = waitingCars.poll
+			
+			synchronized (crossingSquareReservations) { 
+				if (isPathFree(car.enteringRoadSection, car.targetRoadSection)) {
+					allowToGo(car)
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Get the first waiting cars on each road section and order them by entering time
+	 */
+	def waitingCarsByEnteringOrder() : PriorityQueue<PerceivedCar> {
+		val waitingCars : PriorityQueue<PerceivedCar> = new PriorityQueue()
+		
+		// save the first car of each road section if there is one
+		for (rsId : roadSectionIds) {
+			var roadSection = roadSections.get(rsId)
+			
+			synchronized(roadSection) {
+				var carId = roadSection.peek
+				if (carId !== null) {
+					waitingCars.add(cars.get(carId))
+				}
+			}
+		}
+		
+		return waitingCars
+	}
+	
+	/**
+	 * Convert a road section id to a CrossroadDirection
+	 */
+	def rsIdToDirection(roadSectionId : int) {
+		var i : int
+		for (i = 0; i < roadSectionIds.length && roadSectionIds.get(i) != roadSectionId; i++) {}		
+		return CrossroadDirection.fromPosition(i)
+	}
+
+	/**
+	 * Check if the path from one direction to another is not yet reserved
+	 * @return true if the path is free, false else
+	 */
+	def isPathFree(fromId : int, toId : int) : boolean {
+		var from : CrossroadDirection = rsIdToDirection(fromId)
+		var to : CrossroadDirection = rsIdToDirection(toId)
+		
+		val path = from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
+		var isFree = true
+
+		for (square : path) {
+			isFree = isFree && crossingSquareReservations.get(square) === null
+		}
+
+		return isFree
+	}
+	
+	/**
+	 * Allow a car to cross the intersection
+	 * Lock its path and remove it from the currently waiting cars
+	 */
+	def allowToGo(car: PerceivedCar) {
+		lockPath(car.enteringRoadSection, car.targetRoadSection, car.id)
+		car.isGoing = true
+
+		// remove the car from its road section
+		val roadSectionNumber = cars.get(car.id).enteringRoadSection
+		val roadSection = roadSections.get(roadSectionNumber)
+		synchronized (roadSection) {
+			roadSection.remove(car.id)
+		}
+		
+		new Go().emit[it.UUID == car.id]
+	}
+
+	/** 
+	 * Reserve the path from one direction to another for a given car
+	 */
+	def lockPath(fromId : int, toId : int, reserver : UUID) {
+		var from : CrossroadDirection = rsIdToDirection(fromId)
+		var to : CrossroadDirection = rsIdToDirection(toId)
+		
+		val path = from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
+
+		for (square : path) {
+			crossingSquareReservations.set(square, reserver)
+		}
+	}
+
+	/**
+	 * Unlock a crossing square
+	 */
+	def unlockSquare(square : int) {
+		synchronized (crossingSquareReservations) {
+			crossingSquareReservations.set(square, null)
+		}
 	}
 
 	/** 
@@ -66,15 +180,15 @@ agent Intersection {
 	on JoinIntersection {
 		// save only the needed info
 		val car = new PerceivedCar(occurrence.carId, occurrence.position, occurrence.roadSection, occurrence.target)
-		
+
 		// store it
-		synchronized(cars) {
+		synchronized (cars) {
 			cars.put(car.id, car)
 		}
-		
+
 		// assign it to the right road section
 		val roadSection = roadSections.get(car.enteringRoadSection)
-		synchronized(roadSection) {
+		synchronized (roadSection) {
 			roadSection.add(car.id)
 		}
 	}
@@ -83,67 +197,25 @@ agent Intersection {
 	 * Triggered when a car leaves the context of the intersection
 	 * Remove the new car from the lists of known entities
 	 */
-	on LeaveIntersection { 
-		// remove the car from its road section
-		val roadSectionNumber = cars.get(occurrence.carId).enteringRoadSection
-		val roadSection = roadSections.get(roadSectionNumber) 
-		synchronized (roadSection) {
-			roadSection.remove(occurrence.carId)
-		}
-		
+	on LeaveIntersection {
 		// remove the car from the storage
 		synchronized (cars) {
 			cars.remove(occurrence.carId)
 		}
 	}
-	
+
+	on Die {
+		killMe
+	}
+
 	on Destroy {
 		info("Intersection destroyed")
-	}
-
-	/**
-	 * Check if the path from one direction to another is not yet reserved
-	 * @return true if the path is free, false else
-	 */
-	def isPathFree(from : CrossroadDirection, to : CrossroadDirection) : boolean {
-		val path = from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
-		var isFree = true
-
-		synchronized (crossingSquareReservations) {
-			for (square : path) {
-				isFree = isFree && crossingSquareReservations.get(square) === null
-			}
-		}
-
-		return isFree
-	}
-
-	/** 
-	 * Reserve the path from one direction to another for a given car
-	 */
-	def lockPath(from : CrossroadDirection, to : CrossroadDirection, reserver : UUID) {
-		val path = from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
-
-		synchronized (crossingSquareReservations) {
-			for (square : path) {
-				crossingSquareReservations.set(square, reserver)
-			}
-		}
-	}
-
-	def unlockSquare(square : int) {
-		synchronized (crossingSquareReservations) {
-			crossingSquareReservations.set(square, null)
-		}
-	}
-	on Die 	{
-		killMe
 	}
 
 	/** 
 	 * Minimalization of a CarBody with only the required information for the Intersection
 	 */
-	static class PerceivedCar  {
+	static class PerceivedCar implements Comparable<PerceivedCar>  {
 
 		@Accessors
 		val id : UUID
@@ -155,15 +227,27 @@ agent Intersection {
 		@Accessors
 		val enteringRoadSection : int
 
-		// Id of the targetted road section
+		// Id of the targeted road section
 		@Accessors
 		val targetRoadSection : int
+		
+		@Accessors
+		val enteringTime : long
+		
+		@Accessors
+		var isGoing : boolean
 
 		new(id : UUID, position : Vector2d, roadSection : int, target : int) {
 			this.id = id
 			this.position = position
 			this.enteringRoadSection = roadSection
 			this.targetRoadSection = target
+			this.enteringTime = new Date().getTime()
+			this.isGoing = false
+		}
+	
+		def compareTo(otherCar : PerceivedCar) : int {
+			return enteringTime.compareTo(otherCar.enteringTime)
 		}
 	}
 }
