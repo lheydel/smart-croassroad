@@ -10,14 +10,21 @@ import java.util.concurrent.ConcurrentSkipListSet
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 import io.sarl.core.Lifecycle
+import java.util.ArrayList
+import fr.sarl.project.intersection.gui.EnvironmentGui
+import io.sarl.core.OpenEventSpace
+import io.sarl.bootstrap.SRE
+import io.sarl.bootstrap.SREBootstrap
 
 /** 
- * The environmental agent in charge of collecting boids influences and computing the new state of the virtual world
+ * The environmental agent in charge of collecting cars influences and computing the new state of the virtual world
  * @author Nicolas Gaud
  */
 agent Environment {
 
 	uses Logging, DefaultContextInteractions, Schedules, Lifecycle
+
+	var kernel : SREBootstrap
 
 	@Accessors
 	var width : int
@@ -26,9 +33,18 @@ agent Environment {
 	var height : int
 
 	@Accessors
-	var cars : ConcurrentHashMap<UUID, CarBody>
+	var listIntersectionBody : ArrayList<IntersectionBody>
 
-	// Set of boids ID who has sent their influence in the current time step
+	/** 
+	 * The Graphical user interface
+	 */
+	var myGUI : EnvironmentGui
+
+	/*
+	@Accessors
+	var cars : ConcurrentHashMap<UUID, CarBody> */
+
+	// Set of cars ID who has sent their influence in the current time step
 	@Accessors
 	var influences : ConcurrentSkipListSet<UUID>
 
@@ -44,8 +60,19 @@ agent Environment {
 		}
 			
 	}
+	
+	def addCarInRoadSection(c : Car,roadSection : RoadSection)
+	{
+		var sPoint = roadSection.spawnPoint
+		if(sPoint !== null)
+		{
+			// 	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
+			var car : CarBody = new CarBody(c.ID, sPoint, roadSection.numSection,new Vector2d(2,2))	
+		}
+	}
 
-	on Initialize {
+	on Initialize 
+	{
 		loggingName = "Environment"
 		// Environment init parameters : An Integer the grid's height, An integer the grid's width
 		if (occurrence.parameters.size > 1) {
@@ -56,17 +83,48 @@ agent Environment {
 			if (occurrence.parameters.get(1) instanceof Integer) {
 				width = occurrence.parameters.get(1) as Integer
 			}
-			cars = null
+			if (occurrence.parameters.get(2) instanceof SREBootstrap)
+			{
+				kernel = occurrence.parameters.get(2) as SREBootstrap
+			}
+			
+			
+			/*
+			 * car body = new body
+			 * simu.add(body)
+			 * 
+			 * kernel.spawnWithID(typeof(..),ID)
+			 */
+			listIntersectionBody = newArrayList
+			var intersection = kernel.startAgent(typeof(Intersection),1,2,3,4) // starts our intersection agent
+			var intersectionBody = new IntersectionBody(intersection) // links the agent to his body (what we actually have in the environment agent)
+			
+			
+			var myCar =kernel.startAgent(typeof(Car))
+			// new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
+			var aRoadSection = intersectionBody.roadSections.get(0)
+			var myCarBody = new CarBody(myCar, aRoadSection.spawnPoint, aRoadSection.numSection,
+				new Vector2d(0,2))
+				
+			aRoadSection.waitingList.add(myCarBody)
+			listIntersectionBody.add(intersectionBody)
+			
+			this.myGUI = new EnvironmentGui(defaultSpace as OpenEventSpace, height, width, this.listIntersectionBody)
+			
+			//cars = null
 			
 			influences = new ConcurrentSkipListSet
-
+			
+			
+			myGUI.repaint
+			
 		}
 	}
 
 	on Start 
 	{
-		this.cars = occurrence.perceivedAgentBody
-		new GuiRepaint(cars).emit
+		//this.cars = occurrence.perceivedAgentBody
+		//new GuiRepaint(cars).emit
 		//new Perception(boids).emit
 	}
 
@@ -78,6 +136,11 @@ agent Environment {
 	on Die 
 	{
 		killMe
+	}
+
+	on GuiRepaint
+	{
+		this.myGUI.repaint()
 	}
 
 }

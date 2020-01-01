@@ -38,21 +38,23 @@ agent Car
 		
 		//TODO Code to Initialize the car
 		
-		info("The agent was started.")
+		info("a car was started.")
 	}
 
 	on Destroy {
-		// Event trigger when the agent is destroyed from the system.
+		// Event triggered when the agent is destroyed from the system.
 		// You should put all the resource releasing statements in this block of code.
 		info("The agent was stopped.")
+		killMe
 	}
 
 
 	on ContextJoined {
-		// Event trigger when an agent of the level joins a shared context.
+		// Event triggered when an agent of the level joins a shared context.
 		// Sent to a agent of the same level.
 		
 		//TODO Code to present the car to the intersection when it joined it
+		info("a car joined the intersection")
 		
 	}
 
@@ -74,6 +76,12 @@ agent Car
 		
 		//TODO Code for when the car can go
 		
+	}
+	
+	on Die
+	{
+		info("Agent car stopped by the environment")
+		killMe
 	}
 
 	def follow(carToFollow : CarBody) : Vector2d {
