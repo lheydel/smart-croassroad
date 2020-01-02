@@ -60,7 +60,7 @@ agent Environment {
 		{
 			var carId = UUID.randomUUID 
 			var car = new CarBody(carId,
-				listIntersectionBody.get(0).roadSections.get(3).spawnPoint,
+				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn -1).spawnPoint,
 				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn -1).numSection,
 				new Vector2d(0, 2)
 			)
