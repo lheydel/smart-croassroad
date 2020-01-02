@@ -120,10 +120,10 @@ class IntersectionBody
 		var w = 100
 		var l = 400
 
-		var r1 = new RoadSection(1, new Vector2d(400, 0), new Vector2d(500, 400), w, l, new ArrayList<CarBody>())
-		var r2 = new RoadSection(2, new Vector2d(0, 500), new Vector2d(400, 600), w, l, new ArrayList<CarBody>())
-		var r3 = new RoadSection(3, new Vector2d(600, 400), new Vector2d(1000, 500), w, l, new ArrayList<CarBody>())
-		var r4 = new RoadSection(4, new Vector2d(500, 600), new Vector2d(600, 1000), w, l, new ArrayList<CarBody>())
+		var r1 = new RoadSection(1, new Vector2d(400, 0), new Vector2d(500, 400), w, l, new ArrayList<CarBody>()) // haut
+		var r2 = new RoadSection(2, new Vector2d(0, 500), new Vector2d(400, 600), w, l, new ArrayList<CarBody>()) // milieu gauche
+		var r3 = new RoadSection(3, new Vector2d(600, 400), new Vector2d(1000, 500), w, l, new ArrayList<CarBody>()) // milieu droite
+		var r4 = new RoadSection(4, new Vector2d(500, 600), new Vector2d(600, 1000), w, l, new ArrayList<CarBody>()) // bas
 
 		roadSections = newArrayList
 		roadSections.add(r1)

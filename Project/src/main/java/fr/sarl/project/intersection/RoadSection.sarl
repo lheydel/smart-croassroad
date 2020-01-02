@@ -76,7 +76,16 @@ class RoadSection extends Object
 	}
 
 	/*
-	 * @Author el popcorn
+	 * returns true if the road section is horizontal, false otherwise
+	 */
+	def isHorizontal():boolean
+	{
+		return (Math.abs(positionNorthWest.x - positionSouthEast.x) >
+			Math.abs(positionNorthWest.y - positionSouthEast.y)) 		// checks the orientation of our road section
+	}
+
+	/*
+	 * @Author Victor Sonza
 	 * Gets the first available spawning point in a road section
 	 * returns it if the point is contained in the road section, else, returns null
 	 */
@@ -93,8 +102,7 @@ class RoadSection extends Object
 		var xPos : int=-1
 		var yPos : int =-1
 		
-		var horizontal = (Math.abs(positionNorthWest.x - positionSouthEast.x) >
-			Math.abs(positionNorthWest.y - positionSouthEast.y)) // checks the orientation of our road section
+		var horizontal = isHorizontal
 		
 		if(horizontal) xPos = usedSize else yPos = usedSize
 		
@@ -108,6 +116,47 @@ class RoadSection extends Object
 		else spawnPoint = null
 		
 		return spawnPoint
+	}
+	
+	/*
+	 * Returns the exit point of this road section
+	 */
+	def getExitPoint():Vector2d
+	{
+		var exitPoint: Vector2d = new Vector2d
+		var horizontal = isHorizontal()
+		if(horizontal) // gauche et droite
+		{
+			var left = positionNorthWest.x <=500
+			if(left)
+			{
+				exitPoint.x = positionNorthWest.x 
+				exitPoint.y = positionNorthWest.y - width / 2
+				
+			}
+			else
+			{
+				exitPoint.x = positionSouthEast.x 
+				exitPoint.y = positionSouthEast.y + width / 2
+			}
+
+		}
+		else
+		{
+			var top = positionNorthWest.y<=500
+			if(top)
+			{
+				exitPoint.x = positionNorthWest.x +(3*width)/2
+				exitPoint.y = positionNorthWest.y
+			}
+			else
+			{
+				exitPoint.x = positionNorthWest.x - (width/2)
+				exitPoint.y = positionSouthEast.y
+			}
+		}
+		
+		return exitPoint
 	}
 	
 	
