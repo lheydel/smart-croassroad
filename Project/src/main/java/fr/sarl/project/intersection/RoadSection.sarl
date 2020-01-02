@@ -104,28 +104,11 @@ class RoadSection extends Object
 		// (positionNorthWest.x + (width / 2)) as int
 		if(horizontal)
 		{
-
-			var left = positionNorthWest.x <= 500
-			if(left)
-			{
-				middle= (positionNorthWest.y + (width/2)) as int
-			}
-			else
-			{
-				middle = (positionNorthWest.y - (width / 2)) as int
-			}
+			middle = (positionNorthWest.y + (width / 2)) as int
 		}
 		else
 		{
-			var top = positionNorthWest.y <= 500
-			if(top)
-			{
-				middle = (positionNorthWest.x + (width / 2)) as int
-			}
-			else
-			{
-				middle = (positionNorthWest.x - (width / 2)) as int
-			}
+			middle = (positionNorthWest.x + (width / 2)) as int
 		}
 		
 		var xPos : int=-1
