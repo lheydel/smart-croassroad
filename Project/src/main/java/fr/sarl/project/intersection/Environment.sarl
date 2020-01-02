@@ -54,16 +54,24 @@ agent Environment {
 	def addRandomNumberOfCar(min : int, max : int):void
 	{
 		var alea = (min + (Math.random() * ((max - min) + 1))).toInteger
-		var randomRoadSectionSpawn = (Math.random() * (4) + 1).toInteger
-		var randomRoadSectionDestination = (Math.random()*(4)+1).toInteger
+		
 		for (var i = 0; i < alea; i++)
 		{
+			var randomRoadSectionSpawn = (Math.random() * (4) + 1).toInteger
+			var randomRoadSectionDestination = (Math.random() * (4) + 1).toInteger
+			var carOrientation : Vector2d
+			switch (randomRoadSectionSpawn){
+				case 1: carOrientation = new Vector2d(0, 1)
+				case 2: carOrientation = new Vector2d(1, 0)
+				case 3: carOrientation = new Vector2d(-1, 0)
+				case 4: carOrientation = new Vector2d(0, -1)
+			}
 			var carId = UUID.randomUUID 
 			var car = new CarBody(carId,
 				// Remplacer randomRoadSectionSpawn par 1 ou 2 si bug
 				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).spawnPoint,
 				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).numSection,
-				new Vector2d(0, 2)
+				carOrientation
 			)
 			listCarBody.add(car)
 			listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).waitingList.add(car)
@@ -125,7 +133,7 @@ agent Environment {
 			aRoadSection.waitingList.add(myCarBody)*/
 			listIntersectionBody.add(intersectionBody)
 			
-			addRandomNumberOfCar(1,1)
+			addRandomNumberOfCar(5,15)
 			
 			this.myGUI = new EnvironmentGui(defaultSpace as OpenEventSpace, height, width, this.listIntersectionBody)
 			

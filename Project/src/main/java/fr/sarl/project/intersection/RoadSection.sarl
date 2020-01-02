@@ -95,7 +95,7 @@ class RoadSection extends Object
 		
 		var waitingSize =waitingList.size +1
 		
-		var usedSize = waitingSize * 10+ waitingSize*5 // number of vehicles * their size + gap between vehicle * size of the gap
+		var usedSize = waitingSize * 35+ waitingSize*5 // number of vehicles * their size + gap between vehicle * size of the gap
 		
 		var middle = 0
 		
