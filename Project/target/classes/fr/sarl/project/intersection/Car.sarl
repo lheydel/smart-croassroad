@@ -14,6 +14,13 @@ import io.sarl.core.Lifecycle
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import java.util.Collection
+import org.arakhne.afc.math.geometry.d2.d.Shape2d
+import org.arakhne.afc.math.geometry.d2.d.Path2d
+import org.arakhne.afc.math.geometry.d2.d.PathElement2d.QuadPathElement2d
+import org.arakhne.afc.math.geometry.d2.d.PathElement2d
+import org.arakhne.afc.math.geometry.PathElementType
+import java.util.Iterator
+import java.util.ArrayList
 
 /** 
  * @author ASaunier
@@ -132,6 +139,8 @@ agent Car
 				info("Sending Influences.")
 			}
 		]
+		
+		}
 	
 	on Die
 	{
@@ -194,20 +203,100 @@ agent Car
 	 * [1] right
 	 * [2] left
 	 * [3] straight
-	 * 
+	 * return list of position for curved deplacement in intersection
 	 */
-	def traverserInter(dir :int ) {
+	def traverserInter(dir : int) {
+		var point = new Vector2d
+		var cible= new Vector2d
+		var courbe = new Path2d
+		courbe.setLastPoint(this.position.getX(), this.position.getY())
 		if (dir == 1){
+			if (this.direction == 0) {
+				point.setX(this.position.getX())
+				point.setY(this.position.getY() + 50)
+				cible.setX(this.position.getX()+50)
+				cible.setY(this.position.getY() + 50)
+				//var q = new QuadPathElement2d(this.position.getX, this.position.getY, point.getX(),
+				//	point.getY(), cible.getX(), cible.getY())
+				//var a =new ArrayList()
+				//a.add(q)
+				//var i =a.iterator()
+				//courbe = new Path2d(i)
+				courbe.quadTo(point.getX(),
+						point.getY(), cible.getX(), cible.getY())
+				
+			}
+			if (this.direction == 1) {
+				point.setX(this.position.getX()+50)
+				point.setY(this.position.getY() )
+				cible.setX(this.position.getX()+50)
+				cible.setY(this.position.getY() - 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				
+				}
+			if (this.direction == 2) {
+				point.setX(this.position.getX()-50)
+				point.setY(this.position.getY() )
+				cible.setX(this.position.getX()-50)
+				cible.setY(this.position.getY() + 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				}
+			if (this.direction == 3) {
+				point.setX(this.position.getX())
+				point.setY(this.position.getY() - 50)
+				cible.setX(this.position.getX()-50)
+				cible.setY(this.position.getY() - 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				}
 			
-		} else if(dir == 2){
+		} else if (dir == 2) {
+			if (this.direction == 0) {
+				point.setX(this.position.getX())
+				point.setY(this.position.getY() + 50)
+				cible.setX(this.position.getX() - 50)
+				cible.setY(this.position.getY() + 50)
+				// var q = new QuadPathElement2d(this.position.getX, this.position.getY, point.getX(),
+				//	point.getY(), cible.getX(), cible.getY())
+				// var a =new ArrayList()
+				// a.add(q)
+				// var i =a.iterator()
+				// courbe = new Path2d(i)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+
+			}
+			if (this.direction == 1) {
+				point.setX(this.position.getX() + 50)
+				point.setY(this.position.getY())
+				cible.setX(this.position.getX() + 50)
+				cible.setY(this.position.getY() + 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+
+			}
+			if (this.direction == 2) {
+				point.setX(this.position.getX() - 50)
+				point.setY(this.position.getY())
+				cible.setX(this.position.getX() + 50)
+				cible.setY(this.position.getY() - 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+			}
+			if (this.direction == 3) {
+				point.setX(this.position.getX())
+				point.setY(this.position.getY() - 50)
+				cible.setX(this.position.getX() - 50)
+				cible.setY(this.position.getY() - 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				}
 			
 		} else if(dir == 3){
 			
-		}else{
 			
 		}
 		
+		return courbe.toPointArray()
+		
 	}
+	
+	
 
 	def think(perception : Collection<CarBody>) : Vector2d {
 		if (perception !== null) {}
