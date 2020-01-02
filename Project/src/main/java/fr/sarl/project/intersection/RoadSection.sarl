@@ -5,6 +5,7 @@ package fr.sarl.project.intersection
 
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import java.util.ArrayList
+import java.lang.Math
 import org.eclipse.xtend.lib.annotations.Accessors
 
 /** 
@@ -14,7 +15,7 @@ import org.eclipse.xtend.lib.annotations.Accessors
 class RoadSection extends Object 
 {
 	@Accessors
-	var numsection : int
+	var numSection : int
 
 	@Accessors
 	var positionNorthWest : Vector2d
@@ -22,22 +23,43 @@ class RoadSection extends Object
 	@Accessors
 	var positionSouthEast : Vector2d
 	
+	@Accessors
+	var waitingList : ArrayList<CarBody>
+	
+	@Accessors
+	var width : int // Width of the road section (THE HALF THAT IS USEFUL)
+	
+	@Accessors
+	var length :int // Length of the road section
+	
 
 	new 
 	{
-		numsection = -1
+		numSection = -1
 
 		this.positionNorthWest = new Vector2d(-1, -1)
 		
 		this.positionSouthEast = new Vector2d(-1, -1)
+		
+		this.waitingList = newArrayList
+		
+		this.width = -1
+		
+		this.length =-1
 	}
 	
-	new(numS : int,posNW : Vector2d, posSE: Vector2d,c : ArrayList<CarBody>)
+	
+	new(numS : int,posNW : Vector2d, posSE: Vector2d,w : int,l:int, c: ArrayList<CarBody>)
 	{
-		numsection = numS
+		numSection = numS
 
 		this.positionNorthWest = posNW
 		this.positionSouthEast = posSE
+		
+		this.waitingList = c
+		
+		this.width = w
+		this.length = l
 	}
 
 
@@ -52,5 +74,42 @@ class RoadSection extends Object
 		
 		return xOk && yOk 
 	}
+
+	/*
+	 * @Author el popcorn
+	 * Gets the first available spawning point in a road section
+	 * returns it if the point is contained in the road section, else, returns null
+	 */
+	def getSpawnPoint():Vector2d
+	{
+		var spawnPoint: Vector2d = new Vector2d
+		
+		var waitingSize =waitingList.size +1
+		
+		var usedSize = waitingSize * 10+ waitingSize*5 // number of vehicles * their size + gap between vehicle * size of the gap
+		
+		var middle = (positionNorthWest.x + (width / 2)) as int
+		
+		var xPos : int=-1
+		var yPos : int =-1
+		
+		var horizontal = (Math.abs(positionNorthWest.x - positionSouthEast.x) >
+			Math.abs(positionNorthWest.y - positionSouthEast.y)) // checks the orientation of our road section
+		
+		if(horizontal) xPos = usedSize else yPos = usedSize
+		
+		if(horizontal) yPos = middle else xPos = middle
+		
+		if(isInRoadSection(new Vector2d(xPos,yPos)))
+		{
+			spawnPoint.x=xPos
+			spawnPoint.y = yPos
+		}
+		else spawnPoint = null
+		
+		return spawnPoint
+	}
+	
+	
 
 }

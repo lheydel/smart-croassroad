@@ -15,18 +15,20 @@ import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 import io.sarl.lang.core.Agent
 import java.util.ArrayList
+import io.sarl.core.Lifecycle
 
 /** 
  * @author louec
  * 
  */
 agent Intersection {
-	uses Logging
+	uses Logging, Lifecycle
 
 	/** Cars currently in the context of the intersection */
 	val cars : Map<UUID, PerceivedCar> = new HashMap
 	
 	/** The road sections in our intersection */
+	@Accessors
 	val containerRoadSections : ArrayList<RoadSection> = newArrayList
 	
 	/** Waiting queues for each road section of the intersection */
@@ -63,7 +65,11 @@ agent Intersection {
 		for (var i = 0; i < 4; i++) 
 		{
 			roadSections.put(occurrence.parameters.get(i) as Integer, new LinkedList)
+			
 		}
+
+		
+		
 		
 		info("Intersection created")
 	}
@@ -110,6 +116,11 @@ agent Intersection {
 		info("Intersection destroyed")
 	}
 
+	on Die
+	{
+		killMe
+		
+	}
 	static class PerceivedCar  {
 
 		@Accessors
