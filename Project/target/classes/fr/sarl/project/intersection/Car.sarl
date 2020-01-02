@@ -127,10 +127,12 @@ agent Car
 		var cars = occurrence.perceivedAgentBody
 		var myBody = cars.get(ID)
 		if ((myBody !== null) && (myBody.owner == this.ID)) {
-			// Update car speed and position according to the new environmental data
-			this.position = myBody.position
-			this.speed = myBody.speed
-			this.direction=myBody.direction
+			//
+			
+			// Update car speed and position on body 
+			myBody.position = this.position
+			myBody.speed = this.speed 
+			myBody.direction=this.direction
 		}
 		in(Settings::pause) [
 			
