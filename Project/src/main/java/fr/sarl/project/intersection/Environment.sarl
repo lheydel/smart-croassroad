@@ -62,7 +62,7 @@ agent Environment {
 			var car = new CarBody(carId,
 				// Remplacer randomRoadSectionSpawn par 1 ou 2 si bug
 				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).spawnPoint,
-				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn -1).numSection,
+				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).numSection,
 				new Vector2d(0, 2)
 			)
 			listCarBody.add(car)

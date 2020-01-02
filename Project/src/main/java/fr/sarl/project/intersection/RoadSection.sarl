@@ -114,12 +114,45 @@ class RoadSection extends Object
 		var xPos : int=-1
 		var yPos : int =-1
 		
+		var toCheckX:int=-1
+		var toCheckY : int =-1
 		
-		if(horizontal) xPos = usedSize else yPos = usedSize
+		if(horizontal)
+		{
+			var left = positionNorthWest.x <= 500
+			if (left) 
+			{
+				xPos = usedSize
+				toCheckX = xPos
+			}
+			else
+			{
+				xPos = positionSouthEast.x as int - 20 // sinon ça sort :D vu qu'on est pas encore bien orienté
+				// TODO : Virer le -20 quand l'orientation sera bonne
+				toCheckX = positionNorthWest.x as int +usedSize
+			}
+			yPos = middle
+			toCheckY = yPos
+		}
+		else
+		{
+			var top = positionNorthWest.y <= 500
+			if (top) 
+			{
+				yPos = usedSize
+				toCheckY = yPos
+			}
+			else
+			{
+				yPos = positionSouthEast.y as int -50 // sinon ça sort :D vu qu'on est pas encore bien orienté
+				// TODO : Virer le -50 quand l'orientation sera bonne
+				toCheckY = positionNorthWest.y as int + usedSize
+			}
+			xPos = middle
+			toCheckX=xPos
+		}
 		
-		if(horizontal) yPos = middle else xPos = middle
-		
-		if(isInRoadSection(new Vector2d(xPos,yPos)))
+		if(isInRoadSection(new Vector2d(toCheckX,toCheckY)))
 		{
 			spawnPoint.x=xPos
 			spawnPoint.y = yPos
