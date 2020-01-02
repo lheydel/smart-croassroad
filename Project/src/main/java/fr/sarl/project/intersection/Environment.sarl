@@ -34,6 +34,9 @@ agent Environment {
 
 	@Accessors
 	var listIntersectionBody : ArrayList<IntersectionBody>
+	
+	@Accessors
+	var listCarBody : ArrayList<CarBody> = newArrayList
 
 	/** 
 	 * The Graphical user interface
@@ -51,12 +54,22 @@ agent Environment {
 	def addRandomNumberOfCar(min : int, max : int):void
 	{
 		var alea = (min + (Math.random() * ((max - min) + 1))).toInteger
-		var randomRoadSection = (Math.random()*(4)+1).toInteger
+		var randomRoadSectionSpawn = (Math.random() * (4) + 1).toInteger
+		var randomRoadSectionDestination = (Math.random()*(4)+1).toInteger
 		for (var i = 0; i < alea; i++)
 		{
-			
-			// new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
-			//var car : CarBody = new CarBody()
+			var carId = UUID.randomUUID 
+			var car = new CarBody(carId,
+				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn -1).spawnPoint,
+				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn -1).numSection,
+				new Vector2d(0, 2)
+			)
+			listCarBody.add(car)
+			listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).waitingList.add(car)
+			kernel.startAgentWithID(typeof(Car), carId, listIntersectionBody.get(0).owner,
+				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn -1).spawnPoint,
+				listIntersectionBody.get(0).roadSections.get(randomRoadSectionDestination -1).exitPoint
+				)
 		}
 			
 	}
@@ -100,14 +113,16 @@ agent Environment {
 			var intersectionBody = new IntersectionBody(intersection) // links the agent to his body (what we actually have in the environment agent)
 			
 			
-			var myCar =kernel.startAgent(typeof(Car))
+			/*var myCar =kernel.startAgent(typeof(Car))
 			// new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
 			var aRoadSection = intersectionBody.roadSections.get(0)
 			var myCarBody = new CarBody(myCar, aRoadSection.spawnPoint, aRoadSection.numSection,
 				new Vector2d(0,2))
 				
-			aRoadSection.waitingList.add(myCarBody)
+			aRoadSection.waitingList.add(myCarBody)*/
 			listIntersectionBody.add(intersectionBody)
+			
+			addRandomNumberOfCar(1,1)
 			
 			this.myGUI = new EnvironmentGui(defaultSpace as OpenEventSpace, height, width, this.listIntersectionBody)
 			
