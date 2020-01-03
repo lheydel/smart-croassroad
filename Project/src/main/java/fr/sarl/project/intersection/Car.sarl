@@ -3,24 +3,16 @@
  */
 package fr.sarl.project.intersection
 
-import io.sarl.core.ContextJoined
-import io.sarl.core.ContextLeft
+import io.sarl.core.DefaultContextInteractions
 import io.sarl.core.Destroy
 import io.sarl.core.Initialize
-import io.sarl.core.Logging
-import io.sarl.core.DefaultContextInteractions
-import io.sarl.core.Schedules
 import io.sarl.core.Lifecycle
-import java.util.UUID
-import org.arakhne.afc.math.geometry.d2.d.Vector2d
+import io.sarl.core.Logging
+import io.sarl.core.Schedules
 import java.util.Collection
-import org.arakhne.afc.math.geometry.d2.d.Shape2d
+import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Path2d
-import org.arakhne.afc.math.geometry.d2.d.PathElement2d.QuadPathElement2d
-import org.arakhne.afc.math.geometry.d2.d.PathElement2d
-import org.arakhne.afc.math.geometry.PathElementType
-import java.util.Iterator
-import java.util.ArrayList
+import org.arakhne.afc.math.geometry.d2.d.Vector2d
 
 /** 
  * @author ASaunier
@@ -40,13 +32,13 @@ agent Car
 	var acceleration : Double
 	var destination : Vector2d
 	var roadSectionDestination : int
-	var direction : int
 	/* direction value :
 	 * [0] North
 	 * [1] West
 	 * [2] East
 	 * [3] South
-	 * */
+	 */
+	var direction : int
 	var group :Population
 		
 

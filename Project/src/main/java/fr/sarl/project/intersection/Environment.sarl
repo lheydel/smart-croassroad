@@ -58,28 +58,32 @@ agent Environment {
 		
 		for (var i = 0; i < alea; i++)
 		{
-			var randomRoadSectionSpawn = (Math.random() * (4) + 1).toInteger
-			var randomRoadSectionDestination = (Math.random() * (4) + 1).toInteger
+			var randomRoadSectionSpawn = randomRoadSection(listIntersectionBody.get(0))
+			var randomRoadSectionDestination = randomRoadSection(listIntersectionBody.get(0))
 			var carId = UUID.randomUUID 
 			var car = new CarBody(carId,
-				// Remplacer randomRoadSectionSpawn par 1 ou 2 si bug
-				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).spawnPoint,
-				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).numSection,
+				randomRoadSectionSpawn.spawnPoint,
+				randomRoadSectionSpawn.numSection,
 				new Vector2d(0,0),
 				0
 			)
 			listCarBody.add(car)
-			listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).waitingList.add(car)
+			randomRoadSectionSpawn.waitingList.add(car)
 			kernel.startAgentWithID(typeof(Car), carId, 
 				listIntersectionBody.get(0).owner,
 				population,
-				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn -1).spawnPoint,
-				randomRoadSectionSpawn -1,
-				listIntersectionBody.get(0).roadSections.get(randomRoadSectionDestination - 1).exitPoint,
-				randomRoadSectionDestination - 1
+				randomRoadSectionSpawn.spawnPoint,
+				randomRoadSectionSpawn.numSection,
+				randomRoadSectionDestination.exitPoint,
+				randomRoadSectionDestination.numSection
 				)
 		}
 			
+	}
+	
+	def randomRoadSection(intersectionBody : IntersectionBody) : RoadSection {
+		val rand = (Math.random() * intersectionBody.roadSections.length).toInteger
+		return intersectionBody.roadSections.get(rand)
 	}
 	
 	/*def addCarInRoadSection(c : Car,roadSection : RoadSection)

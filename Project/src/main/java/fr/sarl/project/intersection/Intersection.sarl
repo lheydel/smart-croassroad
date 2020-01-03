@@ -9,7 +9,6 @@ import io.sarl.core.Initialize
 import io.sarl.core.Lifecycle
 import io.sarl.core.Logging
 import io.sarl.core.Schedules
-import java.util.ArrayList
 import java.util.Date
 import java.util.LinkedList
 import java.util.Map

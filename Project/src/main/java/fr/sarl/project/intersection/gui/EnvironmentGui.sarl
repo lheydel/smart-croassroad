@@ -20,28 +20,26 @@ package fr.sarl.project.intersection.gui
  * See the License for the specific language governing permissions and
  * limitations under the License.*/
 
-import fr.sarl.project.intersection.Die
 import fr.sarl.project.intersection.CarBody
+import fr.sarl.project.intersection.Die
+import fr.sarl.project.intersection.IntersectionBody
 import io.sarl.core.OpenEventSpace
+import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Frame
 import java.awt.Graphics
+import java.awt.Graphics2D
 import java.awt.Image
 import java.awt.Panel
+import java.awt.Stroke
 import java.awt.^event.WindowAdapter
 import java.awt.^event.WindowEvent
+import java.util.ArrayList
 import java.util.Map
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 
-import java.util.ArrayList
-import
-
-static extension java.lang.Math.*
-import java.awt.Graphics2D
-import java.awt.Stroke
-import java.awt.BasicStroke
-import fr.sarl.project.intersection.IntersectionBody
+import static extension java.lang.Math.*
 
 /** 
  * Graphical user interface for intersections.
