@@ -31,15 +31,13 @@ agent Car
 	uses Logging, DefaultContextInteractions, Schedules, Lifecycle
 	
 	// ID of the environmental agent
-	var intersection : UUID
+	var environment : UUID
 	
 	// variable of the car
 	var position : Vector2d
-	var roadSectionSpawn : int
 	var speed : Vector2d
-	//var acceleration : Double
+	var acceleration : Double
 	var destination : Vector2d
-	var roadSectionDestination : int
 	var direction : int
 	/* direction value :
 	 * [0] North
@@ -47,6 +45,7 @@ agent Car
 	 * [2] East
 	 * [3] South
 	 * */
+	 
 	var group :Population
 		
 
@@ -55,7 +54,8 @@ agent Car
 		// You should put all the initialization statements in this block of code.
 		
 		//TODO Code to Initialize the car
-
+		
+		info("The agent was started.")
 		if (occurrence.parameters.size > 1) {
 			if (occurrence.parameters.get(0) instanceof UUID) {
 				environment = occurrence.parameters.get(0) as UUID
@@ -82,42 +82,22 @@ agent Car
 		}
 		this.speed.length=0.0
 		
-		intersection = occurrence.parameters.get(0) as UUID
-		position = occurrence.parameters.get(1) as Vector2d
-		roadSectionSpawn = occurrence.parameters.get(2) as Integer
-		destination = occurrence.parameters.get(3) as Vector2d
-		roadSectionDestination = occurrence.parameters.get(4) as Integer
-		speed = new Vector2d(0,0)
-		
-		info("Car : " + this.ID + " was started.")
-
-		val waitTask = task("waiting_to_die")
-		waitTask.every(100) [
-			waitTask.cancel
-		]
-		
-		emit(new JoinIntersection(
-			this.ID,
-			position,
-			roadSectionSpawn,
-			roadSectionDestination			
-		))[it.UUID == intersection]
 	}
 
 	on Destroy {
 		// Event triggered when the agent is destroyed from the system.
 		// You should put all the resource releasing statements in this block of code.
-		info("The agent : " + this.ID + " was stopped.")
+		info("The agent was stopped.")
 		killMe
 	}
 
 
-	/*on ContextJoined {
+	on ContextJoined {
 		// Event triggered when an agent of the level joins a shared context.
 		// Sent to a agent of the same level.
 		
 		//TODO Code to present the car to the intersection when it joined it
-		info("the car : " + this.ID + " joined the intersection")
+		info("a car joined the intersection")
 		
 	}
 
@@ -127,7 +107,7 @@ agent Car
 		
 		//TODO Code for when the car leave the intersection
 		
-	}*/
+	}
 	
 	on Wait {
 		
@@ -164,10 +144,9 @@ agent Car
 		
 		}
 	
-	
 	on Die
 	{
-		info("Agent car : " + this.ID + " stopped by the environment")
+		info("Agent car stopped by the environment")
 		killMe
 	}
 

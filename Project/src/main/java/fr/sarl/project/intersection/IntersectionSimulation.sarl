@@ -105,6 +105,21 @@ class IntersectionSimulation implements EventListener {
 
 	}
 
+	@SuppressWarnings("constant_condition", "discouraged_reference")
+	private def launchCar(p : List<Car>, boidName : String) : void {
+		var initialPosition = new Vector2d((Math::random - 0.5) * width, (Math::random - 0.5) * height)
+		var initialVitesse = new Vector2d(Math::random - 0.5, Math::random - 0.5)
+
+		var b = kernel.startAgent(typeof(Car), environment, p, initialPosition, initialVitesse, boidName)
+		
+		// 	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
+		this.carBodies.put(b, new CarBody(environment, initialPosition,0,initialVitesse,1))
+
+		if (Settings::isLogActivated) {
+			System.out.println("Lancement d'une car à la position " + initialPosition + " et avec une vitesse de " +
+				initialVitesse)
+		}
+	}
 
 	private def killAllAgents : void {
 		// do something if you want to

@@ -1,0 +1,12 @@
+package fr.sarl.project.intersection
+
+/** 
+ * Properties of a cars group.
+ * 
+ * @author Guillaume Muller
+ */
+class Population {
+	public var maxSpeed : double
+	public var maxAcc : double
+	
+}
