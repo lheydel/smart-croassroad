@@ -27,6 +27,9 @@ import org.eclipse.xtend.lib.annotations.Accessors
 agent Intersection {
 	uses Logging, Lifecycle, Schedules, DefaultContextInteractions
 	
+	/** The body of the intersection */
+	var body : IntersectionBody
+	
 	/** Cars currently in the context of the intersection */
 	val cars : Map<UUID, PerceivedCar> = new TreeMap
 	
@@ -51,6 +54,7 @@ agent Intersection {
 	 * [1] Western
 	 * [2] Eastern
 	 * [3] Southern
+	 * [4] Intersection Body
 	 */
 	on Initialize {		
 		// init waiting queues
@@ -59,6 +63,8 @@ agent Intersection {
 			roadSections.put(id, new LinkedList)
 			roadSectionIds.set(i, id)
 		}
+		
+		body = occurrence.parameters.get(4) as IntersectionBody
 		
 		info("Intersection created")
 		
@@ -70,14 +76,19 @@ agent Intersection {
 	/**
 	 * Overall management of the crossroad
 	 */
-	def manageCrossroad () {
+	def manageCrossroad() {
 		val waitingCars : PriorityQueue<PerceivedCar> = waitingCarsByEnteringOrder
 		
 		while (waitingCars.peek !== null) {
 			var car = waitingCars.poll
 			
+			// compute the crossingPath of the car if not already done
+			if (car.crossingPath === null) {
+				car.crossingPath = findPath(car.enteringRoadSection, car.targetRoadSection)
+			}
+			
 			synchronized (crossingSquareReservations) { 
-				if (isPathFree(car.enteringRoadSection, car.targetRoadSection)) {
+				if (isPathFree(car.crossingPath)) {
 					allowToGo(car)
 				}
 			}
@@ -113,16 +124,22 @@ agent Intersection {
 		for (i = 0; i < roadSectionIds.length && roadSectionIds.get(i) != roadSectionId; i++) {}		
 		return CrossroadDirection.fromPosition(i)
 	}
+	
+	/**
+	 * Find the path a car must take to go to its target through the intersection
+	 */
+	def findPath(fromId : int, toId : int) : int[] {
+		var from : CrossroadDirection = rsIdToDirection(fromId)
+		var to : CrossroadDirection = rsIdToDirection(toId)
+
+		return from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
+	}
 
 	/**
 	 * Check if the path from one direction to another is not yet reserved
 	 * @return true if the path is free, false else
 	 */
-	def isPathFree(fromId : int, toId : int) : boolean {
-		var from : CrossroadDirection = rsIdToDirection(fromId)
-		var to : CrossroadDirection = rsIdToDirection(toId)
-		
-		val path = from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
+	def isPathFree(path : int[]) : boolean {
 		var isFree = true
 
 		for (square : path) {
@@ -131,37 +148,14 @@ agent Intersection {
 
 		return isFree
 	}
-	
-	/**
-	 * Allow a car to cross the intersection
-	 * Lock its path and remove it from the currently waiting cars
-	 */
-	def allowToGo(car: PerceivedCar) {
-		lockPath(car.enteringRoadSection, car.targetRoadSection, car.id)
-		car.isGoing = true
-
-		// remove the car from its road section
-		val roadSectionNumber = cars.get(car.id).enteringRoadSection
-		val roadSection = roadSections.get(roadSectionNumber)
-		synchronized (roadSection) {
-			roadSection.remove(car.id)
-		}
-		
-		new Go().emit[it.UUID == car.id]
-	}
 
 	/** 
 	 * Reserve the path from one direction to another for a given car
 	 */
-	def lockPath(fromId : int, toId : int, reserver : UUID) {
-		var from : CrossroadDirection = rsIdToDirection(fromId)
-		var to : CrossroadDirection = rsIdToDirection(toId)
-		
-		val path = from.findPath(to, SQUARE_NW, SQUARE_NE, SQUARE_SE, SQUARE_SW)
-
+	def lockPath(path : int[], reserver : UUID) {
 		for (square : path) {
 			crossingSquareReservations.set(square, reserver)
-		}
+		}	
 	}
 
 	/**
@@ -171,6 +165,50 @@ agent Intersection {
 		synchronized (crossingSquareReservations) {
 			crossingSquareReservations.set(square, null)
 		}
+	}
+
+	/** 
+	 * Allow a car to cross the intersection
+	 * Lock its path and remove it from the currently waiting cars
+	 */
+	def allowToGo(car : PerceivedCar) {
+		lockPath(car.crossingPath, car.id)
+		car.isGoing = true
+
+		// remove the car from its road section
+		val roadSectionNumber = cars.get(car.id).enteringRoadSection
+		val roadSection = roadSections.get(roadSectionNumber)
+		synchronized (roadSection) {
+			roadSection.remove(car.id)
+		}
+
+		new Go().emit[it.UUID == car.id]
+	}
+
+	/** 
+	 * Find in which crossing square a given position points to
+	 * @return the crossing square, or -1 if the given position points outside of the intersection center
+	 */
+	def positionToCrossingSquare(position : Vector2d) : int {
+		val bodyCenter = body.intersectionCenter
+		val posNorth = bodyCenter.positionNorthWest.y
+		val posSouth = bodyCenter.positionSouthEast.y
+		val posEast = bodyCenter.positionSouthEast.x
+		val posWest = bodyCenter.positionNorthWest.x
+		val centerX = bodyCenter.center.x
+		val centerY = bodyCenter.center.y
+		
+		// test if outside intersection center
+		if (position.x < posWest || position.x > posEast || position.y < posNorth || position.y > posSouth) {
+			return -1
+		}
+		
+		val isNorth = position.y > posNorth && position.y < centerY
+		val isWest = position.x > posWest && position.x < centerX
+
+		return isNorth
+			   ? isWest ? SQUARE_NW : SQUARE_NE  // north squares
+			   : isWest ? SQUARE_SW : SQUARE_SE  // south squares
 	}
 
 	/** 
@@ -230,6 +268,10 @@ agent Intersection {
 		// Id of the targeted road section
 		@Accessors
 		val targetRoadSection : int
+		
+		// Path through the intersection center
+		@Accessors
+		var crossingPath : int[]
 		
 		@Accessors
 		val enteringTime : long

@@ -3,9 +3,8 @@
  */
 package fr.sarl.project.intersection
 
-import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import java.util.ArrayList
-import java.lang.Math
+import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 
 /** 
@@ -30,7 +29,7 @@ class RoadSection extends Object
 	var width : int // Width of the road section (THE HALF THAT IS USEFUL)
 	
 	@Accessors
-	var length :int // Length of the road section
+	var length : int // Length of the road section
 	
 
 	new 
@@ -66,11 +65,8 @@ class RoadSection extends Object
 	// Check if the position is in my road Section return true if it's the case, otherwise returns false
 	def isInRoadSection(carPosition : Vector2d) : boolean
 	{
-		var xOk : boolean = false
-		var yOk : boolean = false
-		
-		xOk = carPosition.x>this.positionNorthWest.x && carPosition.x<positionSouthEast.x
-		yOk = carPosition.y>this.positionNorthWest.y && carPosition.y<positionSouthEast.y
+		val xOk = carPosition.x > this.positionNorthWest.x && carPosition.x < positionSouthEast.x
+		val yOk = carPosition.y > this.positionNorthWest.y && carPosition.y < positionSouthEast.y
 		
 		return xOk && yOk 
 	}
@@ -79,6 +75,7 @@ class RoadSection extends Object
 	 * @Author el popcorn
 	 * Gets the first available spawning point in a road section
 	 * returns it if the point is contained in the road section, else, returns null
+	 * TODO	update
 	 */
 	def getSpawnPoint():Vector2d
 	{
