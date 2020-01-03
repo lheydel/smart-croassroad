@@ -37,6 +37,9 @@ agent Environment {
 	
 	@Accessors
 	var listCarBody : ArrayList<CarBody> = newArrayList
+	
+	@Accessors
+	var population : Population = new Population()
 
 	/** 
 	 * The Graphical user interface
@@ -59,23 +62,19 @@ agent Environment {
 		{
 			var randomRoadSectionSpawn = (Math.random() * (4) + 1).toInteger
 			var randomRoadSectionDestination = (Math.random() * (4) + 1).toInteger
-			var carOrientation : Vector2d
-			switch (randomRoadSectionSpawn){
-				case 1: carOrientation = new Vector2d(0, 1)
-				case 2: carOrientation = new Vector2d(1, 0)
-				case 3: carOrientation = new Vector2d(-1, 0)
-				case 4: carOrientation = new Vector2d(0, -1)
-			}
 			var carId = UUID.randomUUID 
 			var car = new CarBody(carId,
 				// Remplacer randomRoadSectionSpawn par 1 ou 2 si bug
 				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).spawnPoint,
 				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).numSection,
-				carOrientation
+				new Vector2d(0,0),
+				0
 			)
 			listCarBody.add(car)
 			listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn - 1).waitingList.add(car)
-			kernel.startAgentWithID(typeof(Car), carId, listIntersectionBody.get(0).owner,
+			kernel.startAgentWithID(typeof(Car), carId, 
+				listIntersectionBody.get(0).owner,
+				population,
 				listIntersectionBody.get(0).roadSections.get(randomRoadSectionSpawn -1).spawnPoint,
 				randomRoadSectionSpawn -1,
 				listIntersectionBody.get(0).roadSections.get(randomRoadSectionDestination - 1).exitPoint,
@@ -85,7 +84,7 @@ agent Environment {
 			
 	}
 	
-	def addCarInRoadSection(c : Car,roadSection : RoadSection)
+	/*def addCarInRoadSection(c : Car,roadSection : RoadSection)
 	{
 		var sPoint = roadSection.spawnPoint
 		if(sPoint !== null)
@@ -93,7 +92,7 @@ agent Environment {
 			// 	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
 			var car : CarBody = new CarBody(c.ID, sPoint, roadSection.numSection,new Vector2d(2,2))	
 		}
-	}
+	}*/
 
 	on Initialize 
 	{
@@ -123,6 +122,8 @@ agent Environment {
 			var intersection = kernel.startAgent(typeof(Intersection),1,2,3,4) // starts our intersection agent
 			var intersectionBody = new IntersectionBody(intersection) // links the agent to his body (what we actually have in the environment agent)
 			
+			population.maxAcc = 5.0
+			population.maxSpeed = 5.0
 			
 			/*var myCar =kernel.startAgent(typeof(Car))
 			// new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
