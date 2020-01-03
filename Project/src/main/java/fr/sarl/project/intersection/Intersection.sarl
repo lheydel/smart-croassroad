@@ -44,6 +44,8 @@ agent Intersection {
 	val SQUARE_SE = 3
 	
 	var initialized = false
+	
+	val MAX_FOLLOW = 3
 
 	/**
 	 * Init parameters :
@@ -90,14 +92,28 @@ agent Intersection {
 		while (waitingCars.peek !== null) {
 			var car = waitingCars.poll
 			
-			// compute the crossingPath of the car if not already done
-			if (car.crossingPath === null) {
-				car.crossingPath = findPath(car.enteringRoadSection, car.targetRoadSection)
-			}
-			
 			synchronized (crossingSquareReservations) { 
 				if (isPathFree(car.crossingPath)) {
 					allowToGo(car)
+					
+					// if there are cars waiting behind this one, try to make them follow
+					val carsBehind = roadSections.get(car.enteringRoadSection).clone
+					val pathToFollow = car.crossingPath
+					var prevCar = car
+					var prevCarSent = true
+					
+					for (var i = 0; i < carsBehind.length && i < MAX_FOLLOW && prevCarSent; i++) {
+						car = cars.get(carsBehind.get(i))
+						
+						// if car initialized and can follow the path of the first one, go
+						if (car.initialized && canFollow(car.crossingPath, pathToFollow)) {
+							allowToGo(car, prevCar.id)
+
+						} else {
+							prevCarSent = false
+						}
+						prevCar = car
+					}
 				}
 			}
 		}
@@ -116,12 +132,27 @@ agent Intersection {
 			synchronized(roadSection) {
 				var carId = roadSection.peek
 				if (carId !== null) {
-					waitingCars.add(cars.get(carId))
+					var car = cars.get(carId)
+					if (car.initialized) {
+						waitingCars.add(car)
+					}
 				}
 			}
 		}
 		
 		return waitingCars
+	}
+	
+	def canFollow(path : int[], pathToFollow : int[]) : boolean {
+		if (path.length > pathToFollow.length) {
+			return false
+		}
+		
+		var ok = true
+		for (var i = 0; i < path.length; i++) {
+			ok = ok && path.get(i) === pathToFollow.get(i)
+		}
+		return ok
 	}
 	
 	/**
@@ -241,6 +272,10 @@ agent Intersection {
 		synchronized (roadSection) {
 			roadSection.add(car.id)
 		}
+		
+		// compute the crossing path of the car
+		car.crossingPath = findPath(car.enteringRoadSection, car.targetRoadSection)
+		car.initialized = true
 	}
 	
 	/**
@@ -326,6 +361,9 @@ agent Intersection {
 		
 		@Accessors
 		var currentCrossingSquare : int
+		
+		@Accessors
+		var initialized : boolean
 
 		new(id : UUID, position : Vector2d, roadSection : int, target : int) {
 			this.id = id
@@ -335,6 +373,7 @@ agent Intersection {
 			this.targetRoadSection = target
 			this.isGoing = false
 			this.currentCrossingSquare = -1
+			this.initialized = false
 		}
 	
 		def compareTo(otherCar : PerceivedCar) : int {
