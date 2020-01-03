@@ -8,13 +8,13 @@ public enum CrossroadDirection {
 
 		@Override
 		public int[] toNorth(int nw, int ne, int se, int sw) {
-			int[] path = {nw, ne}; 
+			int[] path = {nw, ne}; // I got an error when doing "return {nw, ne}"
 			return path;
 		}
 		
 		@Override
 		public int[] toSouth(int nw, int ne, int se, int sw) {
-			int[] path = {nw, sw}; // I got an error when doing "return {nw, sw}"
+			int[] path = {nw, sw};
 			return path;
 		}
 

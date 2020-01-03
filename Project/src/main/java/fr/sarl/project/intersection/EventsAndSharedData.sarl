@@ -11,7 +11,13 @@ event Die
 
 event Wait
 
-event Go
+event Go {
+	var carToFollow : UUID
+	
+	new (carToFollow : UUID = null) {
+		this.carToFollow = carToFollow
+	}
+}
 
 event Action {
 	var influence : Vector2d
@@ -36,6 +42,16 @@ event JoinIntersection {
 	}
 }
 
+event UpdatePosition {
+	var carId : UUID
+	var position : Vector2d
+	
+	new (carId : UUID, position : Vector2d) {
+		this.carId = carId
+		this.position = position
+	}
+}
+
 /** 
  * Event specifying when the GUI must be refreshed according to the new environmental state embodied by the specified map
  * @author Victor Sonza
@@ -56,17 +72,6 @@ event Start {
 		perceivedAgentBody = new ConcurrentHashMap<UUID, CarBody>(bodies);
 	}
 
-}
-
-
-
-event LeaveIntersection {
-	// Id of the car leaving the intersection
-	var carId : UUID
-	
-	new(car : UUID) {
-		carId = car
-	}
 }
 
 class CarBody {

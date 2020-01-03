@@ -33,10 +33,6 @@ agent Intersection {
 	/** Cars currently in the context of the intersection */
 	val cars : Map<UUID, PerceivedCar> = new TreeMap
 	
-	/** The road sections in our intersection */
-	@Accessors
-	val containerRoadSections : ArrayList<RoadSection> = newArrayList
-	
 	/** Waiting queues for each road section of the intersection */
 	val roadSections : Map<Integer, Queue<UUID>> = new TreeMap
 	val roadSectionIds : int[] = #[-1, -1, -1, -1]
@@ -46,6 +42,8 @@ agent Intersection {
 	val SQUARE_NW = 1
 	val SQUARE_SW = 2
 	val SQUARE_SE = 3
+	
+	var initialized = false
 
 	/**
 	 * Init parameters :
@@ -66,11 +64,21 @@ agent Intersection {
 		
 		body = occurrence.parameters.get(4) as IntersectionBody
 		
+		initialized = true
 		info("Intersection created")
 		
 		every(500) [
 			manageCrossroad
 		]
+	}
+
+	/** 
+	 * await for the intersection to be fully initialized
+	 */
+	def awaitInitialization(info : String) {
+		while (!initialized) {
+			info(info)
+		}
 	}
 	
 	/**
@@ -161,9 +169,11 @@ agent Intersection {
 	/**
 	 * Unlock a crossing square
 	 */
-	def unlockSquare(square : int) {
+	def unlockSquare(square : int, reserver : UUID) {
 		synchronized (crossingSquareReservations) {
-			crossingSquareReservations.set(square, null)
+			if (crossingSquareReservations.get(square) === reserver) {
+				crossingSquareReservations.set(square, null)
+			}
 		}
 	}
 
@@ -171,7 +181,7 @@ agent Intersection {
 	 * Allow a car to cross the intersection
 	 * Lock its path and remove it from the currently waiting cars
 	 */
-	def allowToGo(car : PerceivedCar) {
+	def allowToGo(car : PerceivedCar, carToFollow : UUID = null) {
 		lockPath(car.crossingPath, car.id)
 		car.isGoing = true
 
@@ -182,7 +192,7 @@ agent Intersection {
 			roadSection.remove(car.id)
 		}
 
-		new Go().emit[it.UUID == car.id]
+		new Go(carToFollow).emit[it.UUID == car.id]
 	}
 
 	/** 
@@ -216,6 +226,8 @@ agent Intersection {
 	 * Add the new car to the lists of known entities
 	 */
 	on JoinIntersection {
+		awaitInitialization("<join> car [" + occurrence.carId + "] awaiting initialization of intersection [" + ID + "]")
+		
 		// save only the needed info
 		val car = new PerceivedCar(occurrence.carId, occurrence.position, occurrence.roadSection, occurrence.target)
 
@@ -230,15 +242,48 @@ agent Intersection {
 			roadSection.add(car.id)
 		}
 	}
+	
+	/**
+	 * Triggered when a car send its new position to the intersection
+	 * If the car is crossing, free the squares it has already gone through
+	 * If the car has finished crossing, make it leave the context of the intersection
+	 */
+	on UpdatePosition {
+		awaitInitialization("<update> car [" + occurrence.carId + "] awaiting initialization of intersection [" + ID + "]")
+		
+		var car : PerceivedCar
+		synchronized (cars) {
+			car = cars.get(occurrence.carId)
+		}
+
+		if (car === null) {
+			return
+		}
+		
+		synchronized (car) {
+			car.position = occurrence.position
+			
+			// if car is crossing, check current crossing square and unlock path if possible
+			var currentSquare = positionToCrossingSquare(car.position)
+			if (car.isGoing && currentSquare !== car.currentCrossingSquare) {
+				unlockSquare(car.currentCrossingSquare, car.id)
+				car.currentCrossingSquare = currentSquare
+				
+				// outside of intersection center --> has leaved the intersection
+				if (currentSquare === -1) {
+					leaveIntersection(car.id)
+				}
+			}
+		}
+	}
 
 	/** 
-	 * Triggered when a car leaves the context of the intersection
-	 * Remove the new car from the lists of known entities
+	 * Remove a given car from the lists of known entities
 	 */
-	on LeaveIntersection {
+	def leaveIntersection(carId : UUID) {
 		// remove the car from the storage
 		synchronized (cars) {
-			cars.remove(occurrence.carId)
+			cars.remove(carId)
 		}
 	}
 
@@ -261,6 +306,9 @@ agent Intersection {
 		@Accessors
 		var position : Vector2d
 
+		@Accessors
+		val enteringTime : long
+
 		// Id of the current road section
 		@Accessors
 		val enteringRoadSection : int
@@ -272,20 +320,21 @@ agent Intersection {
 		// Path through the intersection center
 		@Accessors
 		var crossingPath : int[]
-		
-		@Accessors
-		val enteringTime : long
-		
+
 		@Accessors
 		var isGoing : boolean
+		
+		@Accessors
+		var currentCrossingSquare : int
 
 		new(id : UUID, position : Vector2d, roadSection : int, target : int) {
 			this.id = id
 			this.position = position
+			this.enteringTime = new Date().getTime()
 			this.enteringRoadSection = roadSection
 			this.targetRoadSection = target
-			this.enteringTime = new Date().getTime()
 			this.isGoing = false
+			this.currentCrossingSquare = -1
 		}
 	
 		def compareTo(otherCar : PerceivedCar) : int {

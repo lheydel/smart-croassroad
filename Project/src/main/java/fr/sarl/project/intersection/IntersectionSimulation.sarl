@@ -23,16 +23,11 @@ package fr.sarl.project.intersection
 
 import io.sarl.bootstrap.SRE
 import io.sarl.bootstrap.SREBootstrap
-import fr.sarl.project.intersection.gui.EnvironmentGui
+import io.sarl.core.OpenEventSpace
 import io.sarl.lang.core.AgentContext
 import io.sarl.lang.core.Event
 import io.sarl.lang.core.EventListener
-import io.sarl.core.OpenEventSpace
-import java.util.Map
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
-import org.arakhne.afc.math.geometry.d2.d.Vector2d
-import java.util.List
 
 /** 
  * The boids simulation launching the SARL environment with the corresponding agent and ensuring the communication between agents and the GUI
