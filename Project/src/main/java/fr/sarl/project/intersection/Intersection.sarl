@@ -48,22 +48,17 @@ agent Intersection {
 
 	/**
 	 * Init parameters :
-	 * [0-3] Road section numbers (/!\ before changing sending order, update "position" in enum CrossroadDirection /!\)
-	 * [0] Northern
-	 * [1] Western
-	 * [2] Eastern
-	 * [3] Southern
-	 * [4] Intersection Body
+	 * [0] Intersection Body
 	 */
-	on Initialize {		
+	on Initialize {
+		body = occurrence.parameters.get(0) as IntersectionBody
+		
 		// init waiting queues
-		for (var i = 0; i < 4; i++) {
-			var id = occurrence.parameters.get(i) as Integer
+		for (var i = 0; i < body.roadSections.length; i++) {
+			var id = body.roadSections.get(i).numSection
 			roadSections.put(id, new LinkedList)
 			roadSectionIds.set(i, id)
 		}
-		
-		body = occurrence.parameters.get(4) as IntersectionBody
 		
 		initialized = true
 		info("Intersection created")

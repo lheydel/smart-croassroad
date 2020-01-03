@@ -113,7 +113,7 @@ public enum CrossroadDirection {
 	};
 	
 	@Accessors
-	private int position;
+	public final int position;
 
 	/**
 	 * Find the path needed to go to a given direction in an intersection

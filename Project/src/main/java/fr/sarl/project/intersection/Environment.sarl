@@ -122,8 +122,8 @@ agent Environment {
 			 */
 			listIntersectionBody = newArrayList
 			var intersectionId = UUID.randomUUID()
-			var intersectionBody = new IntersectionBody(intersectionId) // links the body to its owner agent (what we actually have in the environment agent)
-			kernel.startAgentWithID(typeof(Intersection), intersectionId, 1, 2, 3, 4, intersectionBody) // starts our intersection agent
+			var intersectionBody = new IntersectionBody(intersectionId)  // links the body to its owner agent (what we actually have in the environment agent)
+			kernel.startAgentWithID(typeof(Intersection), intersectionId, intersectionBody) // starts our intersection agent
 			
 			population.maxAcc = 5.0
 			population.maxSpeed = 5.0
