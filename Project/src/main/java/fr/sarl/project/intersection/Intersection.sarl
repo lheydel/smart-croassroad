@@ -36,7 +36,9 @@ agent Intersection {
 	val roadSections : Map<Integer, Queue<UUID>> = new TreeMap
 	val roadSectionIds : int[] = #[-1, -1, -1, -1]
 
+	/** Virtual squares making a path to go though the intersection center */
 	val crossingSquareReservations : UUID[] = #[null, null, null, null]
+	val crossingSquarePrioReservations : UUID[] = #[null, null, null, null]
 	val SQUARE_NE = 0
 	val SQUARE_NW = 1
 	val SQUARE_SW = 2
@@ -45,7 +47,7 @@ agent Intersection {
 	var initialized = false
 	
 	val MAX_FOLLOW = 3  // maximum number of cars allowed to follow another one
-	val MAX_WAIT = 30   // maximum waiting time in sec before being prioritized
+	val MAX_WAIT = 30000   // maximum waiting time in ms before being prioritized
 	
 	// stats
 	var totalWaitingTime : double = 0
@@ -90,9 +92,17 @@ agent Intersection {
 		
 		while (waitingCars.peek !== null) {
 			var car = waitingCars.poll
-			
+
+			// if someone has the priority on the path, stop			
+			if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
+				break;
+			} // else
+
 			synchronized (crossingSquareReservations) { 
-				if (isPathFree(car.crossingPath)) {
+				
+				// if path free
+				if (isPathFree(car.crossingPath, car.id, crossingSquareReservations)) {
+						
 					allowToGo(car)
 					
 					// if there are cars waiting behind this one, try to make them follow
@@ -113,6 +123,11 @@ agent Intersection {
 						}
 						prevCar = car
 					}
+					
+				// path not free but has priority	
+				} else if (hasPrio(car)) {
+					// reserve next turn
+					lockPath(car.crossingPath, car.id, crossingSquarePrioReservations)
 				}
 			}
 		}
@@ -154,6 +169,29 @@ agent Intersection {
 		return ok
 	}
 	
+	def hasPrio(car : PerceivedCar) : boolean {
+		return (new Date().getTime() - car.enteringTime) > MAX_WAIT
+	}
+
+	/** 
+	 * Allow a car to cross the intersection
+	 * Lock its path and remove it from the currently waiting cars
+	 */
+	def allowToGo(car : PerceivedCar, carToFollow : UUID = null) {
+		unlockPath(car.crossingPath, car.id, crossingSquarePrioReservations)
+		lockPath(car.crossingPath, car.id, crossingSquareReservations)
+		car.isGoing = true
+
+		// remove the car from its road section
+		val roadSectionNumber = cars.get(car.id).enteringRoadSection
+		val roadSection = roadSections.get(roadSectionNumber)
+		synchronized (roadSection) {
+			roadSection.remove(car.id)
+		}
+
+		new Go(carToFollow).emit[it.UUID == car.id]
+	}
+	
 	/**
 	 * Convert a road section id to a CrossroadDirection
 	 */
@@ -177,11 +215,11 @@ agent Intersection {
 	 * Check if the path from one direction to another is not yet reserved
 	 * @return true if the path is free, false else
 	 */
-	def isPathFree(path : int[]) : boolean {
+	def isPathFree(path : int[], reserver : UUID, crossingSquares : UUID[]) : boolean {
 		var isFree = true
 
 		for (square : path) {
-			isFree = isFree && crossingSquareReservations.get(square) === null
+			isFree = isFree && (crossingSquares.get(square) === null || crossingSquares.get(square) === reserver)
 		}
 
 		return isFree
@@ -190,39 +228,30 @@ agent Intersection {
 	/** 
 	 * Reserve the path from one direction to another for a given car
 	 */
-	def lockPath(path : int[], reserver : UUID) {
+	def lockPath(path : int[], reserver : UUID, crossingSquares : UUID[]) {
 		for (square : path) {
-			crossingSquareReservations.set(square, reserver)
+			crossingSquares.set(square, reserver)
 		}	
+	}
+	
+	/**
+	 * Unlock every square a given reserver has reserved
+	 */
+	def unlockPath(path : int[], reserver : UUID, crossingSquares : UUID[]) {
+		for (square : path) {
+			unlockSquare(square, reserver, crossingSquares)
+		}
 	}
 
 	/**
-	 * Unlock a crossing square
+	 * Unlock a crossing square if it's reserved by a given reserver
 	 */
-	def unlockSquare(square : int, reserver : UUID) {
-		synchronized (crossingSquareReservations) {
-			if (crossingSquareReservations.get(square) === reserver) {
-				crossingSquareReservations.set(square, null)
+	def unlockSquare(square : int, reserver : UUID, crossingSquares : UUID[]) {
+		synchronized (crossingSquares) {
+			if (crossingSquares.get(square) === reserver) {
+				crossingSquares.set(square, null)
 			}
 		}
-	}
-
-	/** 
-	 * Allow a car to cross the intersection
-	 * Lock its path and remove it from the currently waiting cars
-	 */
-	def allowToGo(car : PerceivedCar, carToFollow : UUID = null) {
-		lockPath(car.crossingPath, car.id)
-		car.isGoing = true
-
-		// remove the car from its road section
-		val roadSectionNumber = cars.get(car.id).enteringRoadSection
-		val roadSection = roadSections.get(roadSectionNumber)
-		synchronized (roadSection) {
-			roadSection.remove(car.id)
-		}
-
-		new Go(carToFollow).emit[it.UUID == car.id]
 	}
 
 	/** 
@@ -300,7 +329,7 @@ agent Intersection {
 			// if car is crossing, check current crossing square and unlock path if possible
 			var currentSquare = positionToCrossingSquare(car.position)
 			if (car.isGoing && currentSquare !== car.currentCrossingSquare) {
-				unlockSquare(car.currentCrossingSquare, car.id)
+				unlockSquare(car.currentCrossingSquare, car.id, crossingSquareReservations)
 				car.currentCrossingSquare = currentSquare
 				
 				// outside of intersection center --> has leaved the intersection
