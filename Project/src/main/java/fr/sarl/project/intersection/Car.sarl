@@ -106,6 +106,7 @@ agent Car
 		
 	}*/
 	
+	
 	on Wait {
 		
 		//TODO Code for when the car need to wait
@@ -116,7 +117,11 @@ agent Car
 	
 	on Go {
 		
-		//TODO Code for when the car can go
+		// TODO Code for when the car can go
+		
+		
+		// Update postion
+		new UpdatePosition(this.ID,this.position)
 		
 	}
 	on Perception{
@@ -131,6 +136,11 @@ agent Car
 			myBody.speed = this.speed 
 			myBody.direction=this.direction
 		}
+		
+		//TODO Check if there is a car in front
+		//if there is, manage decceleration to stop before it
+		
+		
 		in(Settings::pause) [
 			
 
@@ -138,8 +148,11 @@ agent Car
 				info("Sending Influences.")
 			}
 		]
+		// Update postion
+		new UpdatePosition(this.ID, this.position)
+	}
+
 		
-		}
 	
 	
 	on Die
