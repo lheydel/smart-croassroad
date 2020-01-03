@@ -44,7 +44,12 @@ agent Intersection {
 	
 	var initialized = false
 	
-	val MAX_FOLLOW = 3
+	val MAX_FOLLOW = 3  // maximum number of cars allowed to follow another one
+	val MAX_WAIT = 30   // maximum waiting time in sec before being prioritized
+	
+	// stats
+	var totalWaitingTime : double = 0
+	var totalFinishedCars : int = 0
 
 	/**
 	 * Init parameters :
@@ -300,7 +305,7 @@ agent Intersection {
 				
 				// outside of intersection center --> has leaved the intersection
 				if (currentSquare === -1) {
-					leaveIntersection(car.id)
+					leaveIntersection(car)
 				}
 			}
 		}
@@ -309,10 +314,15 @@ agent Intersection {
 	/** 
 	 * Remove a given car from the lists of known entities
 	 */
-	def leaveIntersection(carId : UUID) {
+	def leaveIntersection(car : PerceivedCar) {
+		// stats
+		totalWaitingTime += new Date().getTime() - car.enteringTime
+		totalFinishedCars++
+		new UpdateTimer(totalWaitingTime / totalFinishedCars).emit
+		
 		// remove the car from the storage
 		synchronized (cars) {
-			cars.remove(carId)
+			cars.remove(car.id)
 		}
 	}
 

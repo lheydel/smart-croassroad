@@ -44,7 +44,7 @@ event JoinIntersection {
 
 
 event UpdatePosition {
-	var carId : UUID
+	var carId : UUID 
 	var position : Vector2d
 	
 	new (carId : UUID, position : Vector2d) {
@@ -72,6 +72,14 @@ event GuiRepaint {
 		perceivedAgentBody = new ConcurrentHashMap<UUID, IntersectionBody>(bodies);
 	}
 
+}
+
+event UpdateTimer {
+	val timer : double
+	
+	new (timer : double) {
+		this.timer = timer
+	}
 }
 
 event Start {

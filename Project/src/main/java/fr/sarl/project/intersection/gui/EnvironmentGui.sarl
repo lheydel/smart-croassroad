@@ -59,7 +59,7 @@ class EnvironmentGui extends Frame {
 
 	new (comspace : OpenEventSpace, iheight : int, iwidth : int, iIntersections : ArrayList<IntersectionBody>) {
 		super()
-		evtGuiTimer = "0"
+		setTimer(0)
 		handler = new Closer(this, comspace)
 		panel = new EnvironmentGuiPanel(iheight, iwidth,iIntersections)
 
@@ -85,6 +85,10 @@ class EnvironmentGui extends Frame {
 		super.paint(g)
 		this.panel.timer = this.evtGuiTimer
 		this.panel.paint(g)
+	}
+	
+	def setTimer(nbSec : double) {
+		evtGuiTimer = String.format("Temps moy. : %.2f sec", nbSec)
 	}
 
 }
