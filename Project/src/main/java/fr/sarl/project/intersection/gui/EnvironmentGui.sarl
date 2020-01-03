@@ -40,6 +40,7 @@ import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 
 import static extension java.lang.Math.*
+import org.eclipse.xtend.lib.annotations.Accessors
 
 /** 
  * Graphical user interface for intersections.
@@ -48,12 +49,17 @@ import static extension java.lang.Math.*
  */
 class EnvironmentGui extends Frame {
 
+
+	@Accessors
+	var evtGuiTimer : String 
+	
 	var handler : Closer
 
 	var panel : EnvironmentGuiPanel
 
 	new (comspace : OpenEventSpace, iheight : int, iwidth : int, iIntersections : ArrayList<IntersectionBody>) {
 		super()
+		evtGuiTimer = "0"
 		handler = new Closer(this, comspace)
 		panel = new EnvironmentGuiPanel(iheight, iwidth,iIntersections)
 
@@ -77,6 +83,7 @@ class EnvironmentGui extends Frame {
 
 	override paint(g : Graphics) {
 		super.paint(g)
+		this.panel.timer = this.evtGuiTimer
 		this.panel.paint(g)
 	}
 
@@ -122,6 +129,9 @@ package class EnvironmentGuiPanel extends Panel {
 	 * Double buffering management.
 	 */
 	var myImage : Image
+
+	@Accessors
+	var timer : String
 
 	var width : int
 
@@ -186,6 +196,9 @@ package class EnvironmentGuiPanel extends Panel {
 			drawDashedLine(myCanvas, 500, 600, 500, 1000)
 			drawStopLine(myCanvas, 501, 601, 598, 601)
 
+
+			drawTimer(myCanvas,10,20,timer)
+			
 			// Painting the cars
 			if(cars!==null)
 			{
@@ -216,6 +229,13 @@ package class EnvironmentGuiPanel extends Panel {
 		myCanvas = myImage.graphics
 		myGraphics = this.graphics
 	}
+	
+	def drawTimer(g:Graphics,posX:int,posY:int,text : String)
+	{
+		g.color = Color.WHITE
+		g.drawString(text,posX,posY)
+	}
+	
 
 	def paintBuilding(g : Graphics, posX : int, posY : int, width : int, height : int) {
 		g.color = Color.DARK_GRAY
