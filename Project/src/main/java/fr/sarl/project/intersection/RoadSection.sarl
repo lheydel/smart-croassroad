@@ -72,7 +72,16 @@ class RoadSection extends Object
 	}
 
 	/*
-	 * @Author el popcorn
+	 * returns true if the road section is horizontal, false otherwise
+	 */
+	def isHorizontal():boolean
+	{
+		return (Math.abs(positionNorthWest.x - positionSouthEast.x) >
+			Math.abs(positionNorthWest.y - positionSouthEast.y)) 		// checks the orientation of our road section
+	}
+
+	/*
+	 * @Author Victor Sonza
 	 * Gets the first available spawning point in a road section
 	 * returns it if the point is contained in the road section, else, returns null
 	 * TODO	update
@@ -83,21 +92,64 @@ class RoadSection extends Object
 		
 		var waitingSize =waitingList.size +1
 		
-		var usedSize = waitingSize * 10+ waitingSize*5 // number of vehicles * their size + gap between vehicle * size of the gap
+		var usedSize = waitingSize * 35+ waitingSize*5 // number of vehicles * their size + gap between vehicle * size of the gap
 		
-		var middle = (positionNorthWest.x + (width / 2)) as int
+		var middle = 0
+		
+		var horizontal = isHorizontal
+		
+		// (positionNorthWest.x + (width / 2)) as int
+		if(horizontal)
+		{
+			middle = (positionNorthWest.y + (width / 2)) as int
+		}
+		else
+		{
+			middle = (positionNorthWest.x + (width / 2)) as int
+		}
 		
 		var xPos : int=-1
 		var yPos : int =-1
 		
-		var horizontal = (Math.abs(positionNorthWest.x - positionSouthEast.x) >
-			Math.abs(positionNorthWest.y - positionSouthEast.y)) // checks the orientation of our road section
+		var toCheckX:int=-1
+		var toCheckY : int =-1
 		
-		if(horizontal) xPos = usedSize else yPos = usedSize
+		if(horizontal)
+		{
+			var left = positionNorthWest.x <= 500
+			if (left) 
+			{
+				xPos = usedSize
+				toCheckX = xPos
+			}
+			else
+			{
+				xPos = positionSouthEast.x as int - 20 // sinon ça sort :D vu qu'on est pas encore bien orienté
+				// TODO : Virer le -20 quand l'orientation sera bonne
+				toCheckX = positionNorthWest.x as int +usedSize
+			}
+			yPos = middle
+			toCheckY = yPos
+		}
+		else
+		{
+			var top = positionNorthWest.y <= 500
+			if (top) 
+			{
+				yPos = usedSize
+				toCheckY = yPos
+			}
+			else
+			{
+				yPos = positionSouthEast.y as int -50 // sinon ça sort :D vu qu'on est pas encore bien orienté
+				// TODO : Virer le -50 quand l'orientation sera bonne
+				toCheckY = positionNorthWest.y as int + usedSize
+			}
+			xPos = middle
+			toCheckX=xPos
+		}
 		
-		if(horizontal) yPos = middle else xPos = middle
-		
-		if(isInRoadSection(new Vector2d(xPos,yPos)))
+		if(isInRoadSection(new Vector2d(toCheckX,toCheckY)))
 		{
 			spawnPoint.x=xPos
 			spawnPoint.y = yPos
@@ -105,6 +157,47 @@ class RoadSection extends Object
 		else spawnPoint = null
 		
 		return spawnPoint
+	}
+	
+	/*
+	 * Returns the exit point of this road section
+	 */
+	def getExitPoint():Vector2d
+	{
+		var exitPoint: Vector2d = new Vector2d
+		var horizontal = isHorizontal()
+		if(horizontal) // gauche et droite
+		{
+			var left = positionNorthWest.x <=500
+			if(left)
+			{
+				exitPoint.x = positionNorthWest.x 
+				exitPoint.y = positionNorthWest.y - width / 2
+				
+			}
+			else
+			{
+				exitPoint.x = positionSouthEast.x 
+				exitPoint.y = positionSouthEast.y + width / 2
+			}
+
+		}
+		else
+		{
+			var top = positionNorthWest.y<=500
+			if(top)
+			{
+				exitPoint.x = positionNorthWest.x +(3*width)/2
+				exitPoint.y = positionNorthWest.y
+			}
+			else
+			{
+				exitPoint.x = positionNorthWest.x - (width/2)
+				exitPoint.y = positionSouthEast.y
+			}
+		}
+		
+		return exitPoint
 	}
 	
 	

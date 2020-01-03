@@ -13,6 +13,14 @@ import io.sarl.core.Schedules
 import io.sarl.core.Lifecycle
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
+import java.util.Collection
+import org.arakhne.afc.math.geometry.d2.d.Shape2d
+import org.arakhne.afc.math.geometry.d2.d.Path2d
+import org.arakhne.afc.math.geometry.d2.d.PathElement2d.QuadPathElement2d
+import org.arakhne.afc.math.geometry.d2.d.PathElement2d
+import org.arakhne.afc.math.geometry.PathElementType
+import java.util.Iterator
+import java.util.ArrayList
 
 /** 
  * @author ASaunier
@@ -23,38 +31,78 @@ agent Car
 	uses Logging, DefaultContextInteractions, Schedules, Lifecycle
 	
 	// ID of the environmental agent
-	var environment : UUID
+	var intersection : UUID
 	
 	// variable of the car
 	var position : Vector2d
+	var roadSectionSpawn : int
 	var speed : Vector2d
 	var acceleration : Double
 	var destination : Vector2d
+	var roadSectionDestination : int
+	var direction : int
+	/* direction value :
+	 * [0] North
+	 * [1] West
+	 * [2] East
+	 * [3] South
+	 * */
+	var group :Population
 		
 
 	on Initialize {
 		// Event trigger before the agent begin to live or to be used.
 		// You should put all the initialization statements in this block of code.
 		
-		//TODO Code to Initialize the car
+		// TODO Code to Initialize the car
+		intersection = occurrence.parameters.get(0) as UUID
+		group = occurrence.parameters.get(1) as Population
+		acceleration = group.maxAcc
+		position = occurrence.parameters.get(2) as Vector2d
+		if (position.y > 800) {
+			direction = 0
+		} else if (position.y < 200) {
+			direction = 3
+		} else if (position.x > 800) {
+			direction = 1
+		} else if (position.x < 200) {
+			direction = 2
+		}
+		roadSectionSpawn = occurrence.parameters.get(3) as Integer
+		destination = occurrence.parameters.get(4) as Vector2d
+		roadSectionDestination = occurrence.parameters.get(5) as Integer
+		speed = new Vector2d(0,0)
 		
-		info("a car was started.")
+		
+		info("Car : " + this.ID + " was started.")
+
+		val waitTask = task("waiting_to_die")
+		waitTask.every(100) [
+			waitTask.cancel
+		]
+		
+		emit(new JoinIntersection(
+			this.ID,
+			position,
+			roadSectionSpawn,
+			roadSectionDestination			
+		))[it.UUID == intersection]
 	}
 
 	on Destroy {
 		// Event triggered when the agent is destroyed from the system.
 		// You should put all the resource releasing statements in this block of code.
-		info("The agent was stopped.")
+		info("The agent : " + this.ID + " was stopped.")
 		killMe
 	}
 
 
-	on ContextJoined {
+	/*on ContextJoined {
 		// Event triggered when an agent of the level joins a shared context.
 		// Sent to a agent of the same level.
 		
 		//TODO Code to present the car to the intersection when it joined it
-		info("a car joined the intersection")
+		info("the car : " + this.ID + " joined the intersection")
 		
 	}
 
@@ -64,11 +112,13 @@ agent Car
 		
 		//TODO Code for when the car leave the intersection
 		
-	}
+	}*/
 	
 	on Wait {
 		
 		//TODO Code for when the car need to wait
+		speed.set(0.0,0.0)
+		//TODO define a deceleration
 		
 	}	
 	
@@ -77,10 +127,32 @@ agent Car
 		//TODO Code for when the car can go
 		
 	}
+	on Perception{
+		// TODO 
+		var cars = occurrence.perceivedAgentBody
+		var myBody = cars.get(ID)
+		if ((myBody !== null) && (myBody.owner == this.ID)) {
+			//
+			
+			// Update car speed and position on body 
+			myBody.position = this.position
+			myBody.speed = this.speed 
+			myBody.direction=this.direction
+		}
+		in(Settings::pause) [
+			
+
+			if (Settings::isLogActivated) {
+				info("Sending Influences.")
+			}
+		]
+		
+		}
+	
 	
 	on Die
 	{
-		info("Agent car stopped by the environment")
+		info("Agent car : " + this.ID + " stopped by the environment")
 		killMe
 	}
 
@@ -93,5 +165,150 @@ agent Car
 		}
 
 	}
+	def acceleration  {
+		//acceleration linéaire en fonction de la direction du véhicule 
+		
+			if (direction == 1 && this.speed.x <= group.maxSpeed) {
+				this.speed.setX(this.speed.getX + acceleration)
+				this.speed.setY(0)
+			}
+			else if (direction == 2 && this.speed.y >= -group.maxSpeed) {
+				this.speed.setY(this.speed.getY - acceleration)
+				this.speed.setX(0)
+			} 
+			else if (direction == 3 && this.speed.y <= group.maxSpeed) {
+				this.speed.setY(this.speed.getY + acceleration)
+				this.speed.setX(0)
+			} 
+			else if (direction == 4 && this.speed.x >= -group.maxSpeed) {
+				this.speed.setX(this.speed.getX - acceleration)
+				this.speed.setY(0)
+			}
+			else{
+				info("error direction acceleration ")
+			}
+		
+	}
+
+	def decceleration {
+		// decceleration linéaire en fonction de la direction du véhicule
+		if (this.speed.length < 0.0) {
+			if (direction == 1 && this.speed.x >= 0.0) {
+				this.speed.setX(this.speed.getX - acceleration)
+			} else if (direction == 2 && this.speed.y<=0.0) {
+				this.speed.setY(this.speed.getY +acceleration)
+			} else if (direction == 3 && this.speed.y>=0.0) {
+				this.speed.setY(this.speed.getY - acceleration)
+			} else if (direction == 4 && this.speed.y<=0.0) {
+				this.speed.setX(this.speed.getX + acceleration)
+			} else {
+				info("error direction decceleration")
+			}
+		}
+	}
+	/*
+	 * dir 
+	 * [1] right
+	 * [2] left
+	 * [3] straight
+	 * return list of position for curved deplacement in intersection
+	 */
+	def traverserInter(dir : int) {
+		var point = new Vector2d
+		var cible= new Vector2d
+		var courbe = new Path2d
+		courbe.setLastPoint(this.position.getX(), this.position.getY())
+		if (dir == 1){
+			if (this.direction == 0) {
+				point.setX(this.position.getX())
+				point.setY(this.position.getY() + 50)
+				cible.setX(this.position.getX()+50)
+				cible.setY(this.position.getY() + 50)
+				//var q = new QuadPathElement2d(this.position.getX, this.position.getY, point.getX(),
+				//	point.getY(), cible.getX(), cible.getY())
+				//var a =new ArrayList()
+				//a.add(q)
+				//var i =a.iterator()
+				//courbe = new Path2d(i)
+				courbe.quadTo(point.getX(),
+						point.getY(), cible.getX(), cible.getY())
+				
+			}
+			if (this.direction == 1) {
+				point.setX(this.position.getX()+50)
+				point.setY(this.position.getY() )
+				cible.setX(this.position.getX()+50)
+				cible.setY(this.position.getY() - 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				
+				}
+			if (this.direction == 2) {
+				point.setX(this.position.getX()-50)
+				point.setY(this.position.getY() )
+				cible.setX(this.position.getX()-50)
+				cible.setY(this.position.getY() + 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				}
+			if (this.direction == 3) {
+				point.setX(this.position.getX())
+				point.setY(this.position.getY() - 50)
+				cible.setX(this.position.getX()-50)
+				cible.setY(this.position.getY() - 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				}
+			
+		} else if (dir == 2) {
+			if (this.direction == 0) {
+				point.setX(this.position.getX())
+				point.setY(this.position.getY() + 50)
+				cible.setX(this.position.getX() - 50)
+				cible.setY(this.position.getY() + 50)
+				// var q = new QuadPathElement2d(this.position.getX, this.position.getY, point.getX(),
+				//	point.getY(), cible.getX(), cible.getY())
+				// var a =new ArrayList()
+				// a.add(q)
+				// var i =a.iterator()
+				// courbe = new Path2d(i)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+
+			}
+			if (this.direction == 1) {
+				point.setX(this.position.getX() + 50)
+				point.setY(this.position.getY())
+				cible.setX(this.position.getX() + 50)
+				cible.setY(this.position.getY() + 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+
+			}
+			if (this.direction == 2) {
+				point.setX(this.position.getX() - 50)
+				point.setY(this.position.getY())
+				cible.setX(this.position.getX() + 50)
+				cible.setY(this.position.getY() - 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+			}
+			if (this.direction == 3) {
+				point.setX(this.position.getX())
+				point.setY(this.position.getY() - 50)
+				cible.setX(this.position.getX() - 50)
+				cible.setY(this.position.getY() - 50)
+				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				}
+			
+		} else if(dir == 3){
+			
+			
+		}
+		
+		return courbe.toPointArray()
+		
+	}
+	
+	
+
+	def think(perception : Collection<CarBody>) : Vector2d {
+		if (perception !== null) {}
+		
+		}
 
 }
