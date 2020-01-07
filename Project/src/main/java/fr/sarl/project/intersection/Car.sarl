@@ -138,6 +138,8 @@ agent Car
 			 this.position = myBody.position
 			 this.speed = myBody.speed
 			this.direction = myBody.direction
+			
+			info("*********************on perception car*********************")
 		}
 		in(Settings::pause) [
 			emit(new Action => [influence = think(cars.values)])[it.UUID == this.environment]
@@ -204,6 +206,7 @@ agent Car
 			else{
 				info("error direction acceleration ")
 			}
+			info("*********************on acc car*********************")
 		
 	}
 
@@ -222,6 +225,7 @@ agent Car
 				info("error direction decceleration")
 			}
 		}
+		info("*********************on decc car*********************")
 	}
 	/*
 	 * dir 
@@ -325,9 +329,11 @@ agent Car
 
 	def think(perception : Collection<CarBody>) : Vector2d {
 		if (perception !== null) {
+			info("*********************on think car*********************")
 			var distance = 100.0
 			for(body : perception){
-				if(body.direction == this.direction){
+				if (body.direction == this.direction) {
+					info("*********************on think car in front*********************")
 					switch (this.direction) { 
 						case 0:
 							if(body.position.getX == this.position.getX &&
@@ -353,10 +359,14 @@ agent Car
 				}
 			}
 			
-			if(distance < 100.0){
+			if (distance < 100.0  && distance != 0.0) {
+				info("*********************on call decc car*********************")
 				decceleration()
-			}else{
+				
+			} else {
+				info("*********************on call acc car*********************")
 				acceleration()
+				
 			}
 		}
 		return this.speed
