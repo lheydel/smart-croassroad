@@ -41,6 +41,11 @@ agent Environment {
 	@Accessors
 	var population : Population = new Population()
 
+	var influencesNeeded : int
+	var nbCarAgents : Integer = 0
+	
+	var isStarted : Boolean = false
+
 	/** 
 	 * The Graphical user interface
 	 */
@@ -54,24 +59,37 @@ agent Environment {
 	@Accessors
 	var influences : ConcurrentSkipListSet<UUID>
 
-	def addRandomNumberOfCar(min : int, max : int):void
+	def addRandomNumberOfCar(min : int, max : int)
 	{
 		var alea = (min + (Math.random() * ((max - min) + 1))).toInteger
 		
 		for (var i = 0; i < alea; i++)
 		{
+			//var spawnOuest = listIntersectionBody.get(0).roadSections.get(3)
 			var randomRoadSectionSpawn = randomRoadSection(listIntersectionBody.get(0))
 			var randomRoadSectionDestination = randomRoadSection(listIntersectionBody.get(0))
 			var carId = UUID.randomUUID 
-			var car = new CarBody(carId,
-				randomRoadSectionSpawn.spawnPoint,
+			var car = new CarBody(
+				carId,
+				randomRoadSectionSpawn.getSpawnPoint(0),
 				randomRoadSectionSpawn.numSection,
 				new Vector2d(0,0),
 				0
 			)
-			carBodies.put(carId,car)
-			//listCarBody.add(car)
-			randomRoadSectionSpawn.waitingList.add(car)
+			
+			synchronized (randomRoadSectionSpawn.waitingList) {
+				while (!randomRoadSectionSpawn.isSpawnPointFree()) {
+				}
+				
+				synchronized (carBodies) {
+					carBodies.put(carId, car)	
+				}
+				
+				//listCarBody.add(car)
+				// randomRoadSectionSpawn.waitingList.add(car)
+				randomRoadSectionSpawn.waitingList.add(car)				
+			}
+			
 			kernel.startAgentWithID(typeof(Car), carId,
 				this.ID, 
 				listIntersectionBody.get(0).owner,
@@ -80,7 +98,7 @@ agent Environment {
 				randomRoadSectionSpawn.numSection,
 				randomRoadSectionDestination.exitPoint,
 				randomRoadSectionDestination.numSection
-				)
+			)
 		}
 			
 	}
@@ -141,8 +159,10 @@ agent Environment {
 				
 			aRoadSection.waitingList.add(myCarBody)*/
 			listIntersectionBody.add(intersectionBody)
-			
-			addRandomNumberOfCar(15,20)
+
+			every(60000) [
+				addRandomNumberOfCar(1, 1)
+			]
 			
 			this.myGUI = new EnvironmentGui(defaultSpace as OpenEventSpace, height, width, this.listIntersectionBody)
 			
@@ -153,16 +173,18 @@ agent Environment {
 			
 			myGUI.repaint
 			
-			emit(new Start(carBodies))[it.UUID == this.ID]
+			//emit(new Start(carBodies))[it.UUID == this.ID]
 			
 		}
 	}
 
 	on Start 
 	{
+	//	while (defaultSpace.participants.size < 3) {}
 		//this.cars = occurrence.perceivedAgentBody
 		// new GuiRepaint(cars).emit
-		new Perception(carBodies).emit
+		influencesNeeded = nbCarAgents
+		sendPerception
 		
 	}
 
@@ -175,14 +197,15 @@ agent Environment {
 					this.influences.add(occurrence.source.UUID)
 					
 					//TODO
-					applySpeed(occurrence.influence, carBodies.get(occurrence.source.UUID))
+					applySpeed(occurrence.influence, carBodies.get(occurrence.source.UUID), occurrence.direction)
 				}
 
-				if (this.influences.size == this.carBodies.size) {
+				if (this.influences.size == influencesNeeded) {
 					// All boids have sent their influences
 					in(Settings::pause) [
-						this.myGUI.repaint
-						new Perception(carBodies).emit
+						influencesNeeded = nbCarAgents
+						new GuiRepaint().emit
+						sendPerception
 						if (Settings::isLogActivated) {
 							info("New Simulation Step.")
 						}
@@ -193,7 +216,50 @@ agent Environment {
 		}
 	}
 	
-	def applySpeed(speed : Vector2d, body : CarBody) {
+	def sendPerception() {
+		for (intersectionBody : listIntersectionBody) {
+			for (roadSection : intersectionBody.roadSections) {
+				var car: CarBody
+				
+				if (roadSection.waitingList.size > 0) {
+					car = roadSection.waitingList.get(0)
+					val carId = car.owner
+					new Perception(car, null).emit[it.UUID == carId]
+				}
+				
+				for (var i : int = 1; i < roadSection.waitingList.size; i++) {
+					car = roadSection.waitingList.get(i)
+					val carId = car.owner
+					new Perception(car, roadSection.waitingList.get(i - 1)).emit[it.UUID == carId]	
+				}
+			}
+		}
+		
+		
+	}
+	
+	on CarReady {
+		synchronized (nbCarAgents) {
+			nbCarAgents++	
+		}
+
+		synchronized (isStarted) {
+			if (!isStarted) {
+				new Start().emit
+				isStarted = true
+			}
+		}
+		
+	}
+
+	on CarDead {
+		synchronized (nbCarAgents) {
+			nbCarAgents--
+		}
+	}
+	
+	def applySpeed(speed : Vector2d, body : CarBody, direction : Integer) {
+		body.direction = direction
 		body.position = body.position + speed
 		body.speed = speed
 	}
@@ -205,6 +271,7 @@ agent Environment {
 
 	on GuiRepaint
 	{
+		this.myGUI.setCars(carBodies)
 		this.myGUI.repaint()
 	}
 	

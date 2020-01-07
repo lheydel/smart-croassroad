@@ -21,6 +21,12 @@ event Go {
 
 event Action {
 	var influence : Vector2d
+	var direction : Integer
+	
+	new (influence : Vector2d, direction : Integer){
+		this.influence = influence
+		this.direction = direction
+	}
 }
 
 event JoinIntersection {
@@ -54,10 +60,12 @@ event UpdatePosition {
 }
 
 event Perception {
-	val perceivedAgentBody : ConcurrentHashMap<UUID, CarBody>
+	val carBody: CarBody
+	val frontCarBody: CarBody
 
-	new (bodies : ConcurrentHashMap<UUID, CarBody>) {
-		perceivedAgentBody = new ConcurrentHashMap<UUID, CarBody>(bodies);
+	new (carBody : CarBody, previousCarBody : CarBody) {
+		this.carBody = carBody
+		this.frontCarBody = previousCarBody
 	}
 }
 
@@ -65,14 +73,7 @@ event Perception {
  * Event specifying when the GUI must be refreshed according to the new environmental state embodied by the specified map
  * @author Victor Sonza
  */
-event GuiRepaint {
-	val perceivedAgentBody : ConcurrentHashMap<UUID, IntersectionBody>
-
-	new (bodies : ConcurrentHashMap<UUID, IntersectionBody>) {
-		perceivedAgentBody = new ConcurrentHashMap<UUID, IntersectionBody>(bodies);
-	}
-
-}
+event GuiRepaint
 
 event UpdateTimer {
 	val timer : double
@@ -82,14 +83,9 @@ event UpdateTimer {
 	}
 }
 
-event Start {
-	val perceivedAgentBody : ConcurrentHashMap<UUID, CarBody>
-
-	new (bodies : ConcurrentHashMap<UUID, CarBody>) {
-		perceivedAgentBody = new ConcurrentHashMap<UUID, CarBody>(bodies);
-	}
-
-}
+event Start
+event CarReady
+event CarDead
 
 class CarBody {
 
@@ -150,6 +146,8 @@ class IntersectionBody
 		rs.set(CrossroadDirection.EAST.position, new RoadSection(2, new Vector2d(0, 500), new Vector2d(400, 600), w, l, new ArrayList<CarBody>()))
 		rs.set(CrossroadDirection.WEST.position, new RoadSection(3, new Vector2d(600, 400), new Vector2d(1000, 500), w, l, new ArrayList<CarBody>()))
 		rs.set(CrossroadDirection.SOUTH.position, new RoadSection(4, new Vector2d(500, 600), new Vector2d(600, 1000), w, l, new ArrayList<CarBody>()))
+		
+		intersectionCenter = new IntersectionCenter(new Vector2d(500, 500), new Vector2d(400, 400), new Vector2d(600, 600)) 
 
 		roadSections = newArrayList(rs)
 	}

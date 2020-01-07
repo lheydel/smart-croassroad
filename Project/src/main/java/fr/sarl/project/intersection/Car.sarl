@@ -13,6 +13,7 @@ import java.util.Collection
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Path2d
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
+import org.arakhne.afc.math.geometry.d2.d.Point2d
 
 /** 
  * @author ASaunier
@@ -32,16 +33,21 @@ agent Car
 	var roadSectionSpawn : int
 	var speed : Vector2d
 	var acceleration : Double
-	var destination : Vector2d
+	var destination : int
 	var roadSectionDestination : int
+	var vectorEndPoint : Vector2d
 	/* direction value :
-	 * [0] North
+	 * [0] South
 	 * [1] West
 	 * [2] East
-	 * [3] South
+	 * [3] North
 	 */
 	var direction : int
 	var group :Population
+	var canGo = false
+	var nextTo = false
+	var cheminIntersection : Point2d[]
+	var progressionIntersection = 0
 		
 
 	on Initialize {
@@ -54,19 +60,47 @@ agent Car
 		group = occurrence.parameters.get(2) as Population
 		acceleration = group.maxAcc
 		position = occurrence.parameters.get(3) as Vector2d
-		if (position.y > 800) {
+		if (position.y > 600) {
 			direction = 3
-		} else if (position.y < 200) {
+		} else if (position.y < 400) {
 			direction = 0
-		} else if (position.x > 800) {
+		} else if (position.x > 600) {
 			direction = 1
-		} else if (position.x < 200) {
+		} else if (position.x < 400) {
 			direction = 2
 		}
 		roadSectionSpawn = occurrence.parameters.get(4) as Integer
-		destination = occurrence.parameters.get(5) as Vector2d
+		vectorEndPoint = occurrence.parameters.get(5) as Vector2d
 		roadSectionDestination = occurrence.parameters.get(6) as Integer
 		speed = new Vector2d(0, 0)
+		
+		
+		switch(roadSectionSpawn){
+			case 0:{
+				if(roadSectionDestination == 0) destination = 0 
+				else if(roadSectionDestination == 2) destination = 1
+				else if(roadSectionDestination == 1) destination = 2
+				else if(roadSectionDestination == 3) destination = 3
+			}
+			case 1: {
+				if (roadSectionDestination == 0) destination = 1
+				else if (roadSectionDestination == 2)destination = 3
+				else if(roadSectionDestination == 1) destination = 0 
+				else if(roadSectionDestination == 3) destination = 2
+			}
+			case 2: {
+				if (roadSectionDestination == 0 )destination = 2
+				else if (roadSectionDestination == 2) destination = 0
+				else if(roadSectionDestination == 1) destination = 3
+				else if(roadSectionDestination ==3) destination = 1
+			}
+			case 3: {
+				if (roadSectionDestination == 0) destination = 3
+				else if (roadSectionDestination == 2) destination = 2
+				else if(roadSectionDestination == 1) destination = 1
+				else if(roadSectionDestination ==3) destination = 0
+			}
+		}
 		
 		
 		info("Car : " + this.ID + " was started.")
@@ -75,6 +109,8 @@ agent Car
 		waitTask.every(100) [
 			waitTask.cancel
 		]
+		
+		new CarReady().emit[it.UUID == environment]
 		
 		emit(new JoinIntersection(
 			this.ID,
@@ -90,24 +126,6 @@ agent Car
 		info("The agent : " + this.ID + " was stopped.")
 		killMe
 	}
-
-
-	/*on ContextJoined {
-		// Event triggered when an agent of the level joins a shared context.
-		// Sent to a agent of the same level.
-		
-		//TODO Code to present the car to the intersection when it joined it
-		info("the car : " + this.ID + " joined the intersection")
-		
-	}
-
-	on ContextLeft {
-		// Event trigger when an agent of the level jleaves a shared context.
-		// Sent to a agent of the same level.
-		
-		//TODO Code for when the car leave the intersection
-		
-	}*/
 	
 	
 	on Wait {
@@ -121,28 +139,29 @@ agent Car
 	on Go {
 		
 		// TODO Code for when the car can go
+		if (occurrence.carToFollow == null) {
+			canGo = true
+		}else{
+			
+		}
 		
 		
 		// Update postion
-		new UpdatePosition(this.ID,this.position)
+		new UpdatePosition(this.ID,this.position).emit[it.UUID == this.intersection]
 		
 	}
 	on Perception{
 		// TODO 
-		var cars = occurrence.perceivedAgentBody
-		var myBody = cars.get(ID)
+		var frontCar = occurrence.frontCarBody
+		var myBody = occurrence.carBody
 		if ((myBody !== null) && (myBody.owner == this.ID)) {
-			//
-			
-			// Update car speed and position on body 
+			// Update position of body 
 			this.position = myBody.position
-			this.speed = myBody.speed
-			//this.direction = myBody.direction
-			
-			//info("*********************on perception car*********************")
 		}
+		
 		in(Settings::pause) [
-			emit(new Action => [influence = think(cars.values)])[it.UUID == this.environment]
+			emit(new Action(think(frontCar), this.direction))[it.UUID == this.environment]
+			
 
 			if (Settings::isLogActivated) {
 				info("Sending Influences.")
@@ -154,7 +173,7 @@ agent Car
 		
 		//if there is, manage decceleration to stop before iter
 		// Update postion
-		info(this.position + " || " + speed + " || " + direction)
+		//info(this.position + " || " + speed + " || " + direction)
 		new UpdatePosition(this.ID, this.position)
 	}
 
@@ -163,6 +182,7 @@ agent Car
 	
 	on Die
 	{
+		new CarDead().emit[it.UUID == environment]
 		info("Agent car : " + this.ID + " stopped by the environment")
 		killMe
 	}
@@ -196,7 +216,6 @@ agent Car
 				this.speed.setX(0)
 			}
 			else{
-				info("error direction acceleration ")
 			}
 			//info("*********************on acc car*********************")
 		
@@ -204,19 +223,18 @@ agent Car
 
 	def decceleration {
 		// decceleration linéaire en fonction de la direction du véhicule
-		if (this.speed.length < 0.0) {
-			if (direction == 0 && this.speed.x >= acceleration) {
-				this.speed.setX(this.speed.getX - acceleration)
-			} else if (direction == 1 && this.speed.y<=-acceleration) {
-				this.speed.setY(this.speed.getY +acceleration)
-			} else if (direction == 2 && this.speed.y>=acceleration) {
-				this.speed.setY(this.speed.getY - acceleration)
-			} else if (direction == 3 && this.speed.y<= -acceleration) {
-				this.speed.setX(this.speed.getX + acceleration)
-			} else {
-				info("error direction decceleration")
-			}
+		
+		if (direction == 0 && this.speed.y >= acceleration) {
+			this.speed.setY(this.speed.getY - acceleration)
+		} else if (direction == 1 && this.speed.x <= -acceleration) {
+			this.speed.setX(this.speed.getX +acceleration)
+		} else if (direction == 2 && this.speed.x >= acceleration) {
+			this.speed.setX(this.speed.getX - acceleration)
+		} else if (direction == 3 && this.speed.y <= (-acceleration)) {
+			this.speed.setY(this.speed.getY + acceleration)
+		} else {
 		}
+		
 		//info("*********************on decc car*********************")
 	}
 	/*
@@ -230,7 +248,7 @@ agent Car
 		var point = new Vector2d
 		var cible= new Vector2d
 		var courbe = new Path2d
-		courbe.setLastPoint(this.position.getX(), this.position.getY())
+		courbe.moveTo(this.position.getX(), this.position.getY())
 		if (dir == 1){
 			if (this.direction == 0) {
 				point.setX(this.position.getX())
@@ -309,8 +327,10 @@ agent Car
 				}
 			
 		} else if(dir == 3){
+			//TODO GOTTA GO STRAIT (and fast)
 			
-			
+		} else if(dir == 0){
+			//TODO
 		}
 		
 		return courbe.toPointArray()
@@ -319,50 +339,133 @@ agent Car
 	
 	
 
-	def think(perception : Collection<CarBody>) : Vector2d {
-		if (perception !== null) {
-			//info("*********************on think car*********************")
-			var distance = 100.0
-			for(body : perception){
-				if (body.direction == this.direction) {
-					//info("*********************on think car in front*********************")
-					switch (this.direction) { 
-						case 0:
-							if(body.position.getX == this.position.getX &&
-								body.position.getY - this.position.getY <= 75){
-								distance = body.position.getY - this.position.getY
-							}
-						case 1:
-							if (body.position.getY == this.position.getY &&
-								body.position.getX - this.position.getX >= -75) {
-								distance = body.position.getX - this.position.getX * -1
-							}
-						case 2:
-							if (body.position.getY == this.position.getY &&
-								body.position.getX - this.position.getX <= 75) {
-								distance = body.position.getY - this.position.getY
-							}
-						case 3:
-							if (body.position.getX == this.position.getX &&
-								body.position.getY - this.position.getY >= -75) {
-								distance = body.position.getX - this.position.getX * -1
-							}
+	def think(frontCar : CarBody) : Vector2d {
+
+		var distance = 101.0
+		
+		if(canGo && !nextTo){
+			var center = new Vector2d(500,500)
+			
+			switch(direction){
+				case 0: nextTo = this.position.y >= center.y - 110
+				case 1: nextTo = this.position.x <= center.x + 110
+				case 2: nextTo = this.position.x >= center.x - 110
+				case 3: nextTo = this.position.y <= center.y + 110
+			}
+			
+			if (nextTo) {
+				cheminIntersection = traverserInter(this.destination)
+			}
+		}
+			
+		if (nextTo) {
+			if (progressionIntersection < cheminIntersection.length) {
+				var point = cheminIntersection.get(progressionIntersection)
+				speed.setX(point.x - this.position.x)
+				speed.setY(point.y - this.position.y)
+				progressionIntersection++
+			} else {
+			
+		
+			}
+		} else if (frontCar !== null) {
+				// info(body.direction)
+			if (frontCar.direction == this.direction) {
+				// info("*********************on think car in front*********************")
+				switch (this.direction) {
+					case 0: {
+						// if on same line and too close
+						if (frontCar.position.getX as int == this.position.getX as int &&
+							((frontCar.position.getY - this.position.getY) as int) <= 75 && // body.position.getY - this.position.getY < distance &&
+						((frontCar.position.getY - this.position.getY) as int) != 0) {
+						// info("***********" + (body.position.getY - this.position.getY) + "*****")
+							distance = frontCar.position.getY - this.position.getY
+						}
+						if (this.position.y >= (400.0 - 20.0)) {
+							distance = 75.0
+						}
+					}
+					case 1: {
+						if (frontCar.position.getY as int == this.position.getY as int &&
+							((frontCar.position.getX - this.position.getX) as int) >= -75 &&
+						// body.position.getX - this.position.getX * -1 < distance &&
+						((frontCar.position.getX - this.position.getX) as int) != 0) {
+							distance = (frontCar.position.getX - this.position.getX) * -1
+						}
+						if (this.position.x <= (600.0 + 20.0)) {
+							distance = 75.0
+						}
+					}
+					case 2: {
+						if (frontCar.position.getY as int == this.position.getY as int &&
+							((frontCar.position.getX - this.position.getX) as int) <= 75 &&
+						// body.position.getX - this.position.getX < distance &&
+						((frontCar.position.getX - this.position.getX) as int ) != 0) {
+
+							distance = (frontCar.position.getX - this.position.getX)
+
+						}
+						if (this.position.x >= (400.0 - 20.0)) {
+							distance = 75.0
+						}
+					}
+					case 3: {
+					//info( "*********************" +this.position.getX +" " + body.position.getX+" ********")
+						if (frontCar.position.getX as int == this.position.getX as int &&
+							((frontCar.position.getY - this.position.getY) as int) >= -75 &&
+							((frontCar.position.getY - this.position.getY) as int) != 0) {
+							// info("***********" + distance + "*****")
+							distance = ( frontCar.position.getY - this.position.getY) * -1
+								// info("***********" + distance + "*****")
+						}
+						if (this.position.y <= (600.0 + 20.0)) {
+							distance = 75.0
+						}
 					}
 				}
 			}
-			
-			if (distance < 100.0  && distance != 0.0) {
-				//info("*********************on call decc car*********************")
-				decceleration()
-				
-			} else {
-				//info("*********************on call acc car*********************")
-				acceleration()
-				
+		}
+
+		switch (this.direction) {
+			case 0: {
+				if (this.position.y >= (400.0 - 20.0)) {
+					if (distance > 20.0)
+						distance = 20.0
+				}
+				}
+			case 1: {
+				if (this.position.x <= (600.0 + 20.0)) {
+					if (distance > 20.0)
+						distance = 20.0
+				}
+			}
+				case 2: {
+				if (this.position.x >= (400.0 - 20.0)) {
+					if (distance > 20.0)
+						distance = 20.0
+				}
+			}
+			case 3: {
+				if (this.position.y <= (600.0 + 20.0)) {
+					if (distance > 20.0)
+						distance = 20.0
+					}
 			}
 		}
-		return this.speed
 		
+
+		if ((distance as int) < 100 && (distance as int ) > 0) {
+			decceleration()
+
+		} else {
+			// info("*********************on call acc car*********************")
+			acceleration()
+
+		}
+		
+		return this.speed
+
 	}
+	
 
 }

@@ -90,6 +90,10 @@ class EnvironmentGui extends Frame {
 	def setTimer(nbSec : double) {
 		evtGuiTimer = String.format("Temps moy. : %.2f sec", nbSec)
 	}
+	
+	def setCars(cars: Map<UUID, CarBody>) {
+		panel.setCars(cars)
+	}
 
 }
 

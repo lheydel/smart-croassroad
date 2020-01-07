@@ -21,28 +21,18 @@ class IntersectionCenter extends Object
 	@Accessors
 	var positionSouthEast : Vector2d
 	
-	@Accessors
-	var width : int
-
-	@Accessors
-	var height : int
-	
 	new
 	{
 		center = new Vector2d(-1, -1)
 		positionNorthWest = new Vector2d(-1, -1)
 		positionSouthEast = new Vector2d(-1, -1)
-		width = -1
-		height = -1
 	}
 	
-	new(c : Vector2d, pNW : Vector2d, pSE : Vector2d,w:int,h:int)
+	new(c : Vector2d, pNW : Vector2d, pSE : Vector2d)
 	{
 		center = c
 		positionNorthWest = pNW
 		positionSouthEast = pSE
-		width = w
-		height = h
 		
 	}
 }

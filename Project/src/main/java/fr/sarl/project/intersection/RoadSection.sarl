@@ -65,8 +65,8 @@ class RoadSection extends Object
 	// Check if the position is in my road Section return true if it's the case, otherwise returns false
 	def isInRoadSection(carPosition : Vector2d) : boolean
 	{
-		val xOk = carPosition.x > this.positionNorthWest.x && carPosition.x < positionSouthEast.x
-		val yOk = carPosition.y > this.positionNorthWest.y && carPosition.y < positionSouthEast.y
+		val xOk = carPosition.x >= this.positionNorthWest.x && carPosition.x <= positionSouthEast.x
+		val yOk = carPosition.y >= this.positionNorthWest.y && carPosition.y <= positionSouthEast.y
 		
 		return xOk && yOk 
 	}
@@ -124,9 +124,9 @@ class RoadSection extends Object
 			}
 			else
 			{
-				xPos = positionSouthEast.x as int - 20 // sinon ça sort :D vu qu'on est pas encore bien orienté
+				xPos = positionSouthEast.x as int + usedSize // sinon ça sort :D vu qu'on est pas encore bien orienté
 				// TODO : Virer le -20 quand l'orientation sera bonne
-				toCheckX = positionNorthWest.x as int +usedSize
+				toCheckX = positionNorthWest.x as int + usedSize
 			}
 			yPos = middle
 			toCheckY = yPos
@@ -141,9 +141,9 @@ class RoadSection extends Object
 			}
 			else
 			{
-				yPos = positionSouthEast.y as int -50 // sinon ça sort :D vu qu'on est pas encore bien orienté
+				yPos = positionSouthEast.y as int - usedSize // sinon ça sort :D vu qu'on est pas encore bien orienté
 				// TODO : Virer le -50 quand l'orientation sera bonne
-				toCheckY = positionNorthWest.y as int + usedSize
+				toCheckY = positionSouthEast.y as int - usedSize
 			}
 			xPos = middle
 			toCheckX=xPos
@@ -159,7 +159,79 @@ class RoadSection extends Object
 		return spawnPoint
 	}
 	
-	/*
+	def getSpawnPoint(tmp : int) {
+		var spawnPoint : Vector2d = new Vector2d
+		
+		var middle = 0
+
+		var horizontal = isHorizontal
+		
+		// (positionNorthWest.x + (width / 2)) as int
+		if (horizontal) {
+			middle = (positionNorthWest.y + (width / 2)) as int
+		} else {
+			middle = (positionNorthWest.x + (width / 2)) as int
+		}
+
+		var xPos : int = -1
+		var yPos : int = -1
+
+		var toCheckX : int = -1
+		var toCheckY : int = -1
+
+		if (horizontal) {
+			var left = positionNorthWest.x <= 500
+			if (left) {
+				xPos = 0
+				toCheckX = xPos
+			} else {
+				xPos = positionSouthEast.x as int // sinon ça sort :D vu qu'on est pas encore bien orienté
+				// TODO : Virer le -20 quand l'orientation sera bonne
+				toCheckX = positionNorthWest.x as int
+			}
+			yPos = middle
+			toCheckY = yPos
+		} else {
+			var top = positionNorthWest.y <= 500
+			if (top) {
+				yPos = 0
+				toCheckY = yPos
+			} else {
+				yPos = positionSouthEast.y as int  // sinon ça sort :D vu qu'on est pas encore bien orienté
+				// TODO : Virer le -50 quand l'orientation sera bonne
+				toCheckY = positionSouthEast.y as int 
+			}
+			xPos = middle
+			toCheckX = xPos
+		}
+
+		//if (isInRoadSection(new Vector2d(toCheckX, toCheckY))) {
+			spawnPoint.x = xPos
+			spawnPoint.y = yPos
+		//} else
+			//spawnPoint = null
+
+		return spawnPoint
+	}
+	
+	def isSpawnPointFree() : boolean {
+		synchronized (waitingList) {
+			if (waitingList.isEmpty) {
+				return true
+			}
+			
+			val lastCar = waitingList.get(waitingList.size - 1)
+			val spawnPoint = getSpawnPoint(0)
+			
+			if (horizontal) {
+				return !(lastCar.position.x > spawnPoint.x - 50 && lastCar.position.x < spawnPoint.x + 50)
+			} else {
+				return !(lastCar.position.y > spawnPoint.y - 50 && lastCar.position.y < spawnPoint.y + 50)
+			}	
+		}
+	}
+
+	/* 
 	 * Returns the exit point of this road section
 	 */
 	def getExitPoint():Vector2d
@@ -198,8 +270,7 @@ class RoadSection extends Object
 		}
 		
 		return exitPoint
+		
 	}
-	
-	
 
 }
