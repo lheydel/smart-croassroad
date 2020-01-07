@@ -66,11 +66,11 @@ agent Car
 		roadSectionSpawn = occurrence.parameters.get(4) as Integer
 		destination = occurrence.parameters.get(5) as Vector2d
 		roadSectionDestination = occurrence.parameters.get(6) as Integer
-		speed = new Vector2d(0,0)
+		speed = new Vector2d(0, 0)
 		
 		
 		info("Car : " + this.ID + " was started.")
-
+		info("at init " + this.position + " || " + speed + " || " + direction)
 		val waitTask = task("waiting_to_die")
 		waitTask.every(100) [
 			waitTask.cancel
@@ -135,11 +135,11 @@ agent Car
 			//
 			
 			// Update car speed and position on body 
-			 this.position = myBody.position
-			 this.speed = myBody.speed
-			this.direction = myBody.direction
+			this.position = myBody.position
+			this.speed = myBody.speed
+			//this.direction = myBody.direction
 			
-			info("*********************on perception car*********************")
+			//info("*********************on perception car*********************")
 		}
 		in(Settings::pause) [
 			emit(new Action => [influence = think(cars.values)])[it.UUID == this.environment]
@@ -153,16 +153,8 @@ agent Car
 		
 		
 		//if there is, manage decceleration to stop before iter
-		
-		
-		in(Settings::pause) [
-			
-
-			if (Settings::isLogActivated) {
-				info("Sending Influences.")
-			}
-		]
 		// Update postion
+		info(this.position + " || " + speed + " || " + direction)
 		new UpdatePosition(this.ID, this.position)
 	}
 
@@ -187,26 +179,26 @@ agent Car
 	def acceleration  {
 		//acceleration linéaire en fonction de la direction du véhicule 
 		
-			if (direction == 0 && this.speed.x <= group.maxSpeed-acceleration) {
-				this.speed.setX(this.speed.getX + acceleration)
-				this.speed.setY(0)
-			}
-			else if (direction == 1 && this.speed.y >= (-group.maxSpeed)+acceleration) {
-				this.speed.setY(this.speed.getY - acceleration)
-				this.speed.setX(0)
-			} 
-			else if (direction == 2 && this.speed.y <= group.maxSpeed-acceleration) {
+			if (direction == 0 && this.speed.y <= group.maxSpeed-acceleration) {
 				this.speed.setY(this.speed.getY + acceleration)
 				this.speed.setX(0)
-			} 
-			else if (direction == 3 && this.speed.x >= (-group.maxSpeed)+acceleration) {
+			}
+			else if (direction == 1 && this.speed.x >= (-group.maxSpeed)+acceleration) {
 				this.speed.setX(this.speed.getX - acceleration)
 				this.speed.setY(0)
+			} 
+			else if (direction == 2 && this.speed.x <= group.maxSpeed-acceleration) {
+				this.speed.setX(this.speed.getX + acceleration)
+				this.speed.setY(0)
+			} 
+			else if (direction == 3 && this.speed.y >= (-group.maxSpeed)+acceleration) {
+				this.speed.setY(this.speed.getY - acceleration)
+				this.speed.setX(0)
 			}
 			else{
 				info("error direction acceleration ")
 			}
-			info("*********************on acc car*********************")
+			//info("*********************on acc car*********************")
 		
 	}
 
@@ -225,7 +217,7 @@ agent Car
 				info("error direction decceleration")
 			}
 		}
-		info("*********************on decc car*********************")
+		//info("*********************on decc car*********************")
 	}
 	/*
 	 * dir 
@@ -329,11 +321,11 @@ agent Car
 
 	def think(perception : Collection<CarBody>) : Vector2d {
 		if (perception !== null) {
-			info("*********************on think car*********************")
+			//info("*********************on think car*********************")
 			var distance = 100.0
 			for(body : perception){
 				if (body.direction == this.direction) {
-					info("*********************on think car in front*********************")
+					//info("*********************on think car in front*********************")
 					switch (this.direction) { 
 						case 0:
 							if(body.position.getX == this.position.getX &&
@@ -360,11 +352,11 @@ agent Car
 			}
 			
 			if (distance < 100.0  && distance != 0.0) {
-				info("*********************on call decc car*********************")
+				//info("*********************on call decc car*********************")
 				decceleration()
 				
 			} else {
-				info("*********************on call acc car*********************")
+				//info("*********************on call acc car*********************")
 				acceleration()
 				
 			}

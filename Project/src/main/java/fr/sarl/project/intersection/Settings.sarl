@@ -29,6 +29,6 @@ interface Settings {
 	/** 
 	 * Specify a pause delay before each car sends his influence to the environment, and respectively before the environment sends perceptions to cars
 	 */
-	public static val pause = 10
+	public static val pause = 20
 
 }
