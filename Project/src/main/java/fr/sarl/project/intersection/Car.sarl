@@ -132,9 +132,9 @@ agent Car
 			//
 			
 			// Update car speed and position on body 
-			myBody.position = this.position
-			myBody.speed = this.speed 
-			myBody.direction=this.direction
+			 this.position = myBody.position
+			 this.speed = myBody.speed
+			this.direction = myBody.direction
 		}
 		
 		//TODO Check if there is a car in front
