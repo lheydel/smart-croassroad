@@ -173,19 +173,19 @@ agent Car
 	def acceleration  {
 		//acceleration linéaire en fonction de la direction du véhicule 
 		
-			if (direction == 1 && this.speed.x <= group.maxSpeed) {
+			if (direction == 1 && this.speed.x <= group.maxSpeed-acceleration) {
 				this.speed.setX(this.speed.getX + acceleration)
 				this.speed.setY(0)
 			}
-			else if (direction == 2 && this.speed.y >= -group.maxSpeed) {
+			else if (direction == 2 && this.speed.y >= (-group.maxSpeed)+acceleration) {
 				this.speed.setY(this.speed.getY - acceleration)
 				this.speed.setX(0)
 			} 
-			else if (direction == 3 && this.speed.y <= group.maxSpeed) {
+			else if (direction == 3 && this.speed.y <= group.maxSpeed-acceleration) {
 				this.speed.setY(this.speed.getY + acceleration)
 				this.speed.setX(0)
 			} 
-			else if (direction == 4 && this.speed.x >= -group.maxSpeed) {
+			else if (direction == 4 && this.speed.x >= (-group.maxSpeed)+acceleration) {
 				this.speed.setX(this.speed.getX - acceleration)
 				this.speed.setY(0)
 			}
@@ -198,13 +198,13 @@ agent Car
 	def decceleration {
 		// decceleration linéaire en fonction de la direction du véhicule
 		if (this.speed.length < 0.0) {
-			if (direction == 1 && this.speed.x >= 0.0) {
+			if (direction == 1 && this.speed.x >= acceleration) {
 				this.speed.setX(this.speed.getX - acceleration)
-			} else if (direction == 2 && this.speed.y<=0.0) {
+			} else if (direction == 2 && this.speed.y<=-acceleration) {
 				this.speed.setY(this.speed.getY +acceleration)
-			} else if (direction == 3 && this.speed.y>=0.0) {
+			} else if (direction == 3 && this.speed.y>=acceleration) {
 				this.speed.setY(this.speed.getY - acceleration)
-			} else if (direction == 4 && this.speed.y<=0.0) {
+			} else if (direction == 4 && this.speed.y<= -acceleration) {
 				this.speed.setX(this.speed.getX + acceleration)
 			} else {
 				info("error direction decceleration")
