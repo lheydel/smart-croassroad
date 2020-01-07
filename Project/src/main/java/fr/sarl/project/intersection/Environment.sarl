@@ -13,6 +13,7 @@ import java.util.UUID
 import java.util.concurrent.ConcurrentSkipListSet
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
+import java.util.concurrent.ConcurrentHashMap
 
 /** 
  * The environmental agent in charge of collecting cars influences and computing the new state of the virtual world
@@ -34,7 +35,8 @@ agent Environment {
 	var listIntersectionBody : ArrayList<IntersectionBody>
 	
 	@Accessors
-	var listCarBody : ArrayList<CarBody> = newArrayList
+	//var listCarBody : ArrayList<CarBody> = newArrayList
+	var carBodies : ConcurrentHashMap<UUID, CarBody>
 	
 	@Accessors
 	var population : Population = new Population()
@@ -67,7 +69,8 @@ agent Environment {
 				new Vector2d(0,0),
 				0
 			)
-			listCarBody.add(car)
+			carBodies.put(carId,car)
+			//listCarBody.add(car)
 			randomRoadSectionSpawn.waitingList.add(car)
 			kernel.startAgentWithID(typeof(Car), carId, 
 				listIntersectionBody.get(0).owner,
@@ -120,6 +123,7 @@ agent Environment {
 			 * 
 			 * kernel.spawnWithID(typeof(..),ID)
 			 */
+			carBodies = new ConcurrentHashMap
 			listIntersectionBody = newArrayList
 			var intersectionId = UUID.randomUUID()
 			var intersectionBody = new IntersectionBody(intersectionId)  // links the body to its owner agent (what we actually have in the environment agent)
@@ -161,6 +165,28 @@ agent Environment {
 	on Action 
 	{
 		// TODO
+		synchronized (carBodies) {
+			synchronized (influences) { // Two very important "synchronized" blocks that prevent the simulation from thread interblocking
+				if (carBodies.containsKey(occurrence.source.UUID)) {
+					this.influences.add(occurrence.source.UUID)
+					
+					//TODO
+					//applyForce(occurrence.influence, carBodies.get(occurrence.source.UUID))
+				}
+
+				if (this.influences.size == this.carBodies.size) {
+					// All boids have sent their influences
+					in(Settings::pause) [
+						this.myGUI.repaint
+						new Perception(carBodies).emit
+						if (Settings::isLogActivated) {
+							info("New Simulation Step.")
+						}
+					]
+					this.influences.clear
+				}
+			}
+		}
 	}
 
 	on Die 
