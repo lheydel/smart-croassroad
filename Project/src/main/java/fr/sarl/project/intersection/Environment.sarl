@@ -72,7 +72,8 @@ agent Environment {
 			carBodies.put(carId,car)
 			//listCarBody.add(car)
 			randomRoadSectionSpawn.waitingList.add(car)
-			kernel.startAgentWithID(typeof(Car), carId, 
+			kernel.startAgentWithID(typeof(Car), carId,
+				this.ID, 
 				listIntersectionBody.get(0).owner,
 				population,
 				randomRoadSectionSpawn.spawnPoint,
@@ -129,7 +130,7 @@ agent Environment {
 			var intersectionBody = new IntersectionBody(intersectionId)  // links the body to its owner agent (what we actually have in the environment agent)
 			kernel.startAgentWithID(typeof(Intersection), intersectionId, intersectionBody) // starts our intersection agent
 			
-			population.maxAcc = 5.0
+			population.maxAcc = 1.0
 			population.maxSpeed = 5.0
 			
 			/*var myCar =kernel.startAgent(typeof(Car))
@@ -152,14 +153,17 @@ agent Environment {
 			
 			myGUI.repaint
 			
+			emit(new Start(carBodies))[it.UUID == this.ID]
+			
 		}
 	}
 
 	on Start 
 	{
 		//this.cars = occurrence.perceivedAgentBody
-		//new GuiRepaint(cars).emit
-		//new Perception(boids).emit
+		// new GuiRepaint(cars).emit
+		new Perception(carBodies).emit
+		
 	}
 
 	on Action 
@@ -171,7 +175,7 @@ agent Environment {
 					this.influences.add(occurrence.source.UUID)
 					
 					//TODO
-					//applyForce(occurrence.influence, carBodies.get(occurrence.source.UUID))
+					applySpeed(occurrence.influence, carBodies.get(occurrence.source.UUID))
 				}
 
 				if (this.influences.size == this.carBodies.size) {
@@ -187,6 +191,10 @@ agent Environment {
 				}
 			}
 		}
+	}
+	
+	def applySpeed(speed : Vector2d, body : CarBody) {
+		body.position = body.position + speed
 	}
 
 	on Die 

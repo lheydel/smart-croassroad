@@ -22,6 +22,8 @@ agent Car
 {
 	uses Logging, DefaultContextInteractions, Schedules, Lifecycle
 	
+	
+	var environment : UUID
 	// ID of the environmental agent
 	var intersection : UUID
 	
@@ -47,10 +49,11 @@ agent Car
 		// You should put all the initialization statements in this block of code.
 		
 		// TODO Code to Initialize the car
-		intersection = occurrence.parameters.get(0) as UUID
-		group = occurrence.parameters.get(1) as Population
+		environment = occurrence.parameters.get(0) as UUID
+		intersection = occurrence.parameters.get(1) as UUID
+		group = occurrence.parameters.get(2) as Population
 		acceleration = group.maxAcc
-		position = occurrence.parameters.get(2) as Vector2d
+		position = occurrence.parameters.get(3) as Vector2d
 		if (position.y > 800) {
 			direction = 0
 		} else if (position.y < 200) {
@@ -60,9 +63,9 @@ agent Car
 		} else if (position.x < 200) {
 			direction = 2
 		}
-		roadSectionSpawn = occurrence.parameters.get(3) as Integer
-		destination = occurrence.parameters.get(4) as Vector2d
-		roadSectionDestination = occurrence.parameters.get(5) as Integer
+		roadSectionSpawn = occurrence.parameters.get(4) as Integer
+		destination = occurrence.parameters.get(5) as Vector2d
+		roadSectionDestination = occurrence.parameters.get(6) as Integer
 		speed = new Vector2d(0,0)
 		
 		
@@ -136,9 +139,18 @@ agent Car
 			 this.speed = myBody.speed
 			this.direction = myBody.direction
 		}
+		in(Settings::pause) [
+			emit(new Action => [influence = think(cars.values)])[it.UUID == this.environment]
+
+			if (Settings::isLogActivated) {
+				info("Sending Influences.")
+			}
+		]
 		
 		//TODO Check if there is a car in front
-		//if there is, manage decceleration to stop before it
+		
+		
+		//if there is, manage decceleration to stop before iter
 		
 		
 		in(Settings::pause) [
@@ -312,8 +324,43 @@ agent Car
 	
 
 	def think(perception : Collection<CarBody>) : Vector2d {
-		if (perception !== null) {}
-		
+		if (perception !== null) {
+			var distance = 100.0
+			for(body : perception){
+				if(body.direction == this.direction){
+					switch (this.direction) { 
+						case 0:
+							if(body.position.getX == this.position.getX &&
+								body.position.getY - this.position.getY <= 75){
+								distance = body.position.getY - this.position.getY
+							}
+						case 1:
+							if (body.position.getY == this.position.getY &&
+								body.position.getX - this.position.getX >= -75) {
+								distance = body.position.getX - this.position.getX * -1
+							}
+						case 2:
+							if (body.position.getY == this.position.getY &&
+								body.position.getX - this.position.getX <= 75) {
+								distance = body.position.getY - this.position.getY
+							}
+						case 3:
+							if (body.position.getX == this.position.getX &&
+								body.position.getY - this.position.getY >= -75) {
+								distance = body.position.getX - this.position.getX * -1
+							}
+					}
+				}
+			}
+			
+			if(distance < 100.0){
+				decceleration()
+			}else{
+				acceleration()
+			}
 		}
+		return this.speed
+		
+	}
 
 }
