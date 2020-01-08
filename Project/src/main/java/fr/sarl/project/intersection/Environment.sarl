@@ -223,25 +223,25 @@ agent Environment {
 	}
 	
 	def sendPerception() {
-		for (intersectionBody : listIntersectionBody) {
-			for (roadSection : intersectionBody.roadSections) {
-				var car: CarBody
-				
-				if (roadSection.waitingList.size > 0) {
-					car = roadSection.waitingList.get(0)
-					val carId = car.owner
-					new Perception(car, null).emit[it.UUID == carId]
-				}
-				
-				for (var i : int = 1; i < roadSection.waitingList.size; i++) {
-					car = roadSection.waitingList.get(i)
-					val carId = car.owner
-					new Perception(car, roadSection.waitingList.get(i - 1)).emit[it.UUID == carId]	
+		synchronized (listIntersectionBody) {
+			for (intersectionBody : listIntersectionBody) {
+				for (roadSection : intersectionBody.roadSections) {
+					var car : CarBody
+
+					if (roadSection.waitingList.size > 0) {
+						car = roadSection.waitingList.get(0)
+						val carId = car.owner
+						new Perception(car, null).emit[it.UUID == carId]
+					}
+
+					for (var i : int = 1; i < roadSection.waitingList.size; i++) {
+						car = roadSection.waitingList.get(i)
+						val carId = car.owner
+						new Perception(car, roadSection.waitingList.get(i - 1)).emit[it.UUID == carId]
+					}
 				}
 			}
 		}
-		
-		
 	}
 	
 	on CarReady {

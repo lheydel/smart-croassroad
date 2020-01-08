@@ -159,6 +159,8 @@ agent Car
 		if ((myBody !== null) && (myBody.owner == this.ID)) {
 			// Update position of body 
 			this.position = myBody.position
+			// Update postion
+			//new UpdatePosition(this.ID, this.position).emit[it.UUID == this.intersection]
 		}
 		
 		in(Settings::pause) [
@@ -357,12 +359,18 @@ agent Car
 			
 			if (nextTo) {
 				cheminIntersection = traverserInter(this.destination)
+				if (destination == 3) {
+					emit(new leaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
+						it.UUID == this.environment
+					]
+				}
 				
 			}
 		}
 			
 		if (nextTo) {
 			if (destination ==3){
+				
 				
 			} else {
 				if (progressionIntersection < cheminIntersection.length) {
