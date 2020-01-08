@@ -14,6 +14,7 @@ import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Path2d
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.arakhne.afc.math.geometry.d2.d.Point2d
+import io.sarl.core.InnerContextAccess
 
 /** 
  * @author ASaunier
@@ -21,11 +22,11 @@ import org.arakhne.afc.math.geometry.d2.d.Point2d
  */
 agent Car 
 {
-	uses Logging, DefaultContextInteractions, Schedules, Lifecycle
-	
-	
-	var environment : UUID
+	uses Logging, DefaultContextInteractions, Schedules, Lifecycle, InnerContextAccess
+
 	// ID of the environmental agent
+	var environment : UUID
+	// ID of the intersection agent
 	var intersection : UUID
 	
 	// variable of the car
@@ -44,9 +45,14 @@ agent Car
 	 */
 	var direction : int
 	var group :Population
+	
+	// true if the car can cross the intersection
 	var canGo = false
+	// true if the car is close enough to the intersection
 	var nextTo = false
+	// Define the points of the intersection where the car need to change of direction 
 	var cheminIntersection : Point2d[]
+	// Help to determine the next point
 	var progressionIntersection = 0
 		
 
@@ -68,29 +74,29 @@ agent Car
 		
 		
 		switch(roadSectionSpawn){
-			case 1:{
-				if(roadSectionDestination == 1) destination = 0 
-				else if(roadSectionDestination == 2) destination = 1
-				else if(roadSectionDestination == 3) destination = 2
-				else if(roadSectionDestination == 4) destination = 3
+			case 1:{ // From North
+				if(roadSectionDestination == 1) destination = 0 // Going back
+				else if (roadSectionDestination == 2)destination = 1 // Going right
+				else if(roadSectionDestination == 3) destination = 2 // Going left
+				else if(roadSectionDestination == 4) destination = 3 // Going strait
 			}
-			case 3: {
-				if (roadSectionDestination == 1) destination = 1
-				else if (roadSectionDestination == 2)destination = 3
-				else if(roadSectionDestination == 3) destination = 0 
-				else if(roadSectionDestination == 4) destination = 2
+			case 3: { // From East
+				if (roadSectionDestination == 1) destination = 1 // Going right
+				else if (roadSectionDestination == 2) destination = 3 // Going strait
+				else if(roadSectionDestination == 3) destination = 0 // Going back
+				else if(roadSectionDestination == 4) destination = 2 // Going left
 			}
-			case 2: {
-				if (roadSectionDestination == 1 )destination = 2
-				else if (roadSectionDestination == 2) destination = 0
-				else if(roadSectionDestination == 3) destination = 3
-				else if(roadSectionDestination ==4) destination = 1
+			case 2: { // From West
+				if (roadSectionDestination == 1) destination = 2 // Going left
+				else if (roadSectionDestination == 2) destination = 0 // Going back
+				else if(roadSectionDestination == 3) destination = 3 // Going strait
+				else if(roadSectionDestination == 4) destination = 1 // Going right
 			}
-			case 4: {
-				if (roadSectionDestination == 1) destination = 3
-				else if (roadSectionDestination == 2) destination = 2
-				else if(roadSectionDestination == 3) destination = 1
-				else if(roadSectionDestination ==4) destination = 0
+			case 4: { // // From South
+				if (roadSectionDestination == 1) destination = 3 // Going strait
+				else if (roadSectionDestination == 2) destination = 2 // Going left
+				else if(roadSectionDestination == 3) destination = 1 // Going right
+				else if(roadSectionDestination == 4) destination = 0 // Going back
 			}
 		}
 		
@@ -175,6 +181,13 @@ agent Car
 		if ((myBody !== null) && (myBody.owner == this.ID)) {
 			// Update position of body 
 			this.position = myBody.position
+			
+			switch(this.direction){
+				case 0: if(position.y > 1100) emit(new Die)[it.UUID == this.ID]
+				case 1: if(position.x < -100) emit(new Die)[it.UUID == this.ID]
+				case 2: if(position.x > 1100) emit(new Die)[it.UUID == this.ID]
+				case 3: if(position.y < -100) emit(new Die)[it.UUID == this.ID]
+			}
 			// Update postion
 			//new UpdatePosition(this.ID, this.position).emit[it.UUID == this.intersection]
 		}
@@ -203,6 +216,9 @@ agent Car
 	on Die
 	{
 		new CarDead().emit[it.UUID == environment]
+		emit(new leaveLeavingList(this.roadSectionSpawn, this.ID, this.intersection)) [
+			it.UUID == this.environment
+		]
 		info("Agent car : " + this.ID + " stopped by the environment")
 		killMe
 	}

@@ -41,7 +41,7 @@ agent Environment {
 	@Accessors
 	var population : Population = new Population()
 
-	var influencesNeeded : int
+	var influencesNeeded : Integer
 	var nbCarAgents : Integer = 0
 	
 	var isStarted : Boolean = false
@@ -203,19 +203,21 @@ agent Environment {
 					//TODO
 					applySpeed(occurrence.influence, carBodies.get(occurrence.source.UUID), occurrence.direction)
 				}
-
-				if (this.influences.size == influencesNeeded) {
-					// All boids have sent their influences
-					in(Settings::pause) [
-						influencesNeeded = nbCarAgents
-						new GuiRepaint().emit
-						sendPerception
-						if (Settings::isLogActivated) {
-							info("New Simulation Step.")
-						}
-					]
-					this.influences.clear
+				synchronized (influencesNeeded) {
+					if (this.influences.size == influencesNeeded) {
+						// All boids have sent their influences
+						in(Settings::pause) [
+							influencesNeeded = nbCarAgents
+							new GuiRepaint().emit
+							sendPerception
+							if (Settings::isLogActivated) {
+								info("New Simulation Step.")
+							}
+						]
+						this.influences.clear
 				}
+				}
+				
 			}
 		}
 	}
@@ -275,11 +277,27 @@ agent Environment {
 					if (intersection.owner == occurrence.intersection) {
 						for(roadSection : intersection.roadSections){
 							if (roadSection.numSection == occurrence.roadSection) {
-								roadSection.removeCarFromWaitingList(this.carBodies.get(occurrence.car))
+								roadSection.waitingList.remove(this.carBodies.get(occurrence.car))
 								roadSection.leavingList.add(this.carBodies.get(occurrence.car))
 							}
 						}
-						
+					}
+				}
+			}
+		}
+	}
+	
+	on leaveLeavingList {
+		synchronized (carBodies) {
+			synchronized (listIntersectionBody) {
+				for (intersection : this.listIntersectionBody) {
+					if (intersection.owner == occurrence.intersection) {
+						for (roadSection : intersection.roadSections) {
+							if (roadSection.numSection == occurrence.roadSection) {
+								roadSection.leavingList.remove(this.carBodies.get(occurrence.car))
+								this.carBodies.remove(occurrence.car)
+							}
+						}
 					}
 				}
 			}
@@ -290,6 +308,10 @@ agent Environment {
 		synchronized (nbCarAgents) {
 			nbCarAgents--
 		}
+		synchronized (influencesNeeded) {
+			influencesNeeded--
+		}
+
 	}
 	
 	def applySpeed(speed : Vector2d, body : CarBody, direction : Integer) {

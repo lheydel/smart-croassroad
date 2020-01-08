@@ -24,6 +24,19 @@ event leaveWaitingList {
 	}
 }
 
+event leaveLeavingList {
+	var roadSection : int
+	var intersection : UUID
+	var car : UUID
+
+	new (roadSection : int, car : UUID, intersection : UUID) {
+
+		this.roadSection = roadSection
+		this.car = car
+		this.intersection = intersection
+	}
+}
+
 event Go {
 	var carToFollow : UUID
 	
