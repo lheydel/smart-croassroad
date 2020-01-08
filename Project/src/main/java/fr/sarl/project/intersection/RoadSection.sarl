@@ -278,6 +278,37 @@ class RoadSection extends Object
 		return exitPoint
 		
 	}
+
+	def getExitRoadSectionPoint() : Vector2d {
+		var exitPoint : Vector2d = new Vector2d
+		var horizontal = isHorizontal()
+		if (horizontal) // gauche et droite
+		{
+			var left = positionNorthWest.x <= 500
+			if (left) {
+				exitPoint.x = positionSouthEast.x
+				exitPoint.y = positionNorthWest.y - width / 2
+
+			} else {
+				exitPoint.x = positionNorthWest.x
+				exitPoint.y = positionSouthEast.y + width / 2
+			}
+
+		} else {
+			var top = positionNorthWest.y <= 500
+			if (top) {
+				exitPoint.x = positionNorthWest.x + (3 * width) / 2
+				exitPoint.y = positionSouthEast.y
+			} else {
+				exitPoint.x = positionNorthWest.x - (width / 2)
+				exitPoint.y = positionNorthWest.y
+			}
+		}
+
+		return exitPoint
+
+	}
+	
 	def removeCarFromWaitingList(car : CarBody){
 		this.waitingList.remove(car)
 	}

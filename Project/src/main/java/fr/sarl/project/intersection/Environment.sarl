@@ -71,8 +71,8 @@ agent Environment {
 			while (randomRoadSectionSpawn == randomRoadSectionDestination) {
 				randomRoadSectionDestination = randomRoadSection(listIntersectionBody.get(0))
 			}
-			randomRoadSectionSpawn = listIntersectionBody.get(0).roadSections.get(1)
-			randomRoadSectionDestination = listIntersectionBody.get(0).roadSections.get(2)
+			randomRoadSectionSpawn = listIntersectionBody.get(0).roadSections.get(3)
+			randomRoadSectionDestination = listIntersectionBody.get(0).roadSections.get(0)
 			
 			var carId = UUID.randomUUID 
 			var car = new CarBody(
@@ -102,7 +102,7 @@ agent Environment {
 				population,
 				randomRoadSectionSpawn.spawnPoint,
 				randomRoadSectionSpawn.numSection,
-				randomRoadSectionDestination.exitPoint,
+				randomRoadSectionDestination.exitRoadSectionPoint,
 				randomRoadSectionDestination.numSection
 			)
 		}
@@ -166,7 +166,7 @@ agent Environment {
 			aRoadSection.waitingList.add(myCarBody)*/
 			listIntersectionBody.add(intersectionBody)
 
-			every(3000) [
+			every(50000) [
 				addRandomNumberOfCar(1, 1)
 			]
 			

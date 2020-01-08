@@ -60,15 +60,7 @@ agent Car
 		group = occurrence.parameters.get(2) as Population
 		acceleration = group.maxAcc
 		position = occurrence.parameters.get(3) as Vector2d
-		if (position.y > 600) {
-			direction = 3
-		} else if (position.y < 400) {
-			direction = 0
-		} else if (position.x > 600) {
-			direction = 1
-		} else if (position.x < 400) {
-			direction = 2
-		}
+		setDirection()
 		roadSectionSpawn = occurrence.parameters.get(4) as Integer
 		vectorEndPoint = occurrence.parameters.get(5) as Vector2d
 		roadSectionDestination = occurrence.parameters.get(6) as Integer
@@ -118,6 +110,30 @@ agent Car
 			roadSectionSpawn,
 			roadSectionDestination			
 		))[it.UUID == intersection]
+	}
+	
+	def setDirection() {
+		if (position.y >= 600) {
+			direction = 3
+		} else if (position.y <= 400) {
+			direction = 0
+		} else if (position.x >= 600) {
+			direction = 1
+		} else if (position.x <= 400) {
+			direction = 2
+		}
+	}
+
+	def setDirectionExit {
+		if (position.y >= 600) {
+			direction = 0
+		} else if (position.y <= 400) {
+			direction = 3
+		} else if (position.x >= 600) {
+			direction = 2
+		} else if (position.x <= 400) {
+			direction = 1
+		}
 	}
 
 	on Destroy {
@@ -248,17 +264,18 @@ agent Car
 	 * [3] straight
 	 * return list of position for curved deplacement in intersection
 	 */
-	def traverserInter(dir : int) {
+	def traverserInter(dest : int) {
 		var point = new Vector2d
+		var point2 = new Vector2d
 		var cible= new Vector2d
 		var courbe = new Path2d
 		courbe.moveTo(this.position.getX(), this.position.getY())
-		if (dir == 1){
+		if (dest == 1) { // Go right
 			if (this.direction == 0) {
-				point.setX(this.position.getX())
-				point.setY(this.position.getY() + 50)
-				cible.setX(this.position.getX()+50)
-				cible.setY(this.position.getY() + 50)
+				point.setX(450)
+				point.setY(450)
+				cible.setX(this.vectorEndPoint.getX -50)
+				cible.setY(this.vectorEndPoint.getY)
 				//var q = new QuadPathElement2d(this.position.getX, this.position.getY, point.getX(),
 				//	point.getY(), cible.getX(), cible.getY())
 				//var a =new ArrayList()
@@ -270,34 +287,54 @@ agent Car
 				
 			}
 			if (this.direction == 1) {
-				point.setX(this.position.getX()+50)
+				/*point.setX(this.position.getX()+50)
 				point.setY(this.position.getY() )
 				cible.setX(this.position.getX()+50)
-				cible.setY(this.position.getY() - 50)
+				cible.setY(this.position.getY() - 50)*/
+				
+				point.setX(550)
+				point.setY(450)
+				cible.setX(this.vectorEndPoint.getX)
+				cible.setY(this.vectorEndPoint.getY - 50)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
+				//courbe.curveTo()
 				
 				}
 			if (this.direction == 2) {
-				point.setX(this.position.getX()-50)
-				point.setY(this.position.getY() )
-				cible.setX(this.position.getX()-50)
-				cible.setY(this.position.getY() + 50)
+//				point.setX(this.position.getX()-50)
+//				point.setY(this.position.getY() )
+//				cible.setX(this.position.getX()-50)
+				// cible.setY(this.position.getY() + 50)
+				point.setX(450)
+				point.setY(550)
+				cible.setX(this.vectorEndPoint.getX)
+				cible.setY(this.vectorEndPoint.getY + 50)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 				}
 			if (this.direction == 3) {
-				point.setX(this.position.getX())
-				point.setY(this.position.getY() - 50)
-				cible.setX(this.position.getX()-50)
-				cible.setY(this.position.getY() - 50)
+//				point.setX(this.position.getX())
+//				point.setY(this.position.getY() - 50)
+//				cible.setX(this.position.getX()-50)
+				// cible.setY(this.position.getY() - 50)
+				point.setX(550)
+				point.setY(550)
+				cible.setX(this.vectorEndPoint.getX + 50)
+				cible.setY(this.vectorEndPoint.getY)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 				}
 			
-		} else if (dir == 2) {
+		} else if (dest == 2) { // Go left
+
 			if (this.direction == 0) {
-				point.setX(this.position.getX())
-				point.setY(this.position.getY() + 50)
-				cible.setX(this.position.getX() - 50)
-				cible.setY(this.position.getY() + 50)
+//				point.setX(this.position.getX())
+//				point.setY(this.position.getY() + 50)
+//				cible.setX(this.position.getX() - 50)
+				// cible.setY(this.position.getY() + 50)
+				point.setX(450)
+				point.setY(550)
+				cible.setX(this.vectorEndPoint.getX + 50)
+				cible.setY(this.vectorEndPoint.getY)
+
 				// var q = new QuadPathElement2d(this.position.getX, this.position.getY, point.getX(),
 				//	point.getY(), cible.getX(), cible.getY())
 				// var a =new ArrayList()
@@ -308,34 +345,96 @@ agent Car
 
 			}
 			if (this.direction == 1) {
-				point.setX(this.position.getX() + 50)
-				point.setY(this.position.getY())
-				cible.setX(this.position.getX() + 50)
-				cible.setY(this.position.getY() + 50)
+//				point.setX(this.position.getX() + 50)
+//				point.setY(this.position.getY())
+//				cible.setX(this.position.getX() + 50)
+				// cible.setY(this.position.getY() + 50)
+				point.setX(450)
+				point.setY(450)
+				cible.setX(this.vectorEndPoint.getX)
+				cible.setY(this.vectorEndPoint.getY + 50)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 
 			}
 			if (this.direction == 2) {
-				point.setX(this.position.getX() - 50)
-				point.setY(this.position.getY())
-				cible.setX(this.position.getX() + 50)
-				cible.setY(this.position.getY() - 50)
+//				point.setX(this.position.getX() - 50)
+//				point.setY(this.position.getY())
+//				cible.setX(this.position.getX() + 50)
+				// cible.setY(this.position.getY() - 50)
+				point.setX(550)
+				point.setY(550)
+				cible.setX(this.vectorEndPoint.getX)
+				cible.setY(this.vectorEndPoint.getY - 50)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 			}
 			if (this.direction == 3) {
-				point.setX(this.position.getX())
-				point.setY(this.position.getY() - 50)
-				cible.setX(this.position.getX() - 50)
-				cible.setY(this.position.getY() - 50)
+//				point.setX(this.position.getX())
+//				point.setY(this.position.getY() - 50)
+//				cible.setX(this.position.getX() - 50)
+				// cible.setY(this.position.getY() - 50)
+				point.setX(550)
+				point.setY(450)
+				cible.setX(this.vectorEndPoint.getX - 50)
+				cible.setY(this.vectorEndPoint.getY)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 				}
 			
-		} else if(dir == 3){
-			//OK
-			
-		} else if(dir == 0){
-			//TODO
+		} else if (dest == 0) { // turn back
+			if (this.direction == 0) {
+				// point.setX(this.position.getX() - 50)
+				// point.setY(this.position.getY())
+				// cible.setX(this.position.getX() + 50)
+				// cible.setY(this.position.getY() - 50)
+				point.setX(450)
+				point.setY(550)
+				point2.setX(550)
+				point2.setY(550)
+				cible.setX(this.vectorEndPoint.getX)
+				cible.setY(this.vectorEndPoint.getY - 50)
+				courbe.curveTo(point.getX(), point.getY(), point2.getX(), point2.getY(), cible.getX(), cible.getY())
+			}
+			if (this.direction == 1) {
+				// point.setX(this.position.getX() + 50)
+				// point.setY(this.position.getY())
+				// cible.setX(this.position.getX() + 50)
+				// cible.setY(this.position.getY() + 50)
+				point.setX(450)
+				point.setY(450)
+				point2.setX(450)
+				point2.setY(550)
+				cible.setX(this.vectorEndPoint.getX + 50)
+				cible.setY(this.vectorEndPoint.getY)
+				courbe.curveTo(point.getX(), point.getY(), point2.getX(), point2.getY(), cible.getX(), cible.getY())
+
+			}
+			if (this.direction == 2) {
+				// point.setX(this.position.getX() - 50)
+				// point.setY(this.position.getY())
+				// cible.setX(this.position.getX() + 50)
+				// cible.setY(this.position.getY() - 50)
+				point.setX(550)
+				point.setY(550)
+				point2.setX(550)
+				point2.setY(450)
+				cible.setX(this.vectorEndPoint.getX - 50)
+				cible.setY(this.vectorEndPoint.getY)
+				courbe.curveTo(point.getX(), point.getY(), point2.getX(), point2.getY(), cible.getX(), cible.getY())
+			}
+			if (this.direction == 3) {
+				// point.setX(this.position.getX())
+				// point.setY(this.position.getY() - 50)
+				// cible.setX(this.position.getX() - 50)
+				// cible.setY(this.position.getY() - 50)
+				point.setX(550)
+				point.setY(450)
+				point2.setX(450)
+				point2.setY(450)
+				cible.setX(this.vectorEndPoint.getX)
+				cible.setY(this.vectorEndPoint.getY + 50)
+				courbe.curveTo(point.getX(), point.getY(), point2.getX(), point2.getY(), cible.getX(), cible.getY())
+				}			
 		}
+		
 		
 		return courbe.toPointArray()
 		
@@ -358,33 +457,77 @@ agent Car
 			}
 			
 			if (nextTo) {
-				cheminIntersection = traverserInter(this.destination)
+				
+				//cheminIntersection
 				if (destination == 3) {
+
 					emit(new leaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
 						it.UUID == this.environment
 					]
+				} else {
+					cheminIntersection = traverserInter(this.destination)
+					
 				}
 				
 			}
 		}
 			
 		if (nextTo) {
+
 			if (destination ==3){
+
 				
 				
 			} else {
-				if (progressionIntersection < cheminIntersection.length) {
-					var point = cheminIntersection.get(progressionIntersection)
-					speed.setX(point.x - this.position.x)
-					speed.setY(point.y - this.position.y)
-					progressionIntersection++
 
-					if (progressionIntersection == 1) {
+				if (progressionIntersection < cheminIntersection.length -1) {
+
+					var point = cheminIntersection.get(progressionIntersection)
+					if(
+						(point.x - this.position.x) < 10 && (point.x - this.position.x) > -10 &&
+						(point.y - this.position.y) < 10 && (point.y - this.position.y) > -10 &&
+						progressionIntersection > 0)
+						{
+							info("pos between acceptable range")
+							if (destination == 1 && progressionIntersection < cheminIntersection.length - 1 &&
+								progressionIntersection >= 1) {
+								switch (this.direction) {
+									case 0: this.direction = 1
+									case 1: this.direction = 3
+									case 2: this.direction = 0
+									case 3: this.direction = 2
+								}
+							} else if (progressionIntersection < cheminIntersection.length - 1 &&
+								progressionIntersection >= 1) {
+								switch (this.direction) {
+									case 0: this.direction = 2
+									case 1: this.direction = 0
+									case 2: this.direction = 3
+									case 3: this.direction = 1
+								}
+							}
+						progressionIntersection++							
+					}
+//					speed.setX(point.x - this.position.x)
+					// speed.setY(point.y - this.position.y)
+					acceleration()
+
+					if (progressionIntersection == 0) {
 						emit(new leaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
 							it.UUID == this.environment
 						]
+						progressionIntersection++	
 					}
 				} else {
+					if (progressionIntersection == cheminIntersection.length) {
+						setDirectionExit()
+						this.speed = new Vector2d(0, 0)
+						progressionIntersection++
+					}
+					
+					acceleration()
+					
+					
 				}
 				
 			}
@@ -473,9 +616,6 @@ agent Car
 					}
 				}
 			}
-		
-		
-		
 
 			if ((distance as int) < 100 && (distance as int ) > 0) {
 				decceleration()
@@ -492,5 +632,4 @@ agent Car
 
 	}
 	
-
 }
