@@ -68,6 +68,12 @@ agent Environment {
 			//var spawnOuest = listIntersectionBody.get(0).roadSections.get(3)
 			var randomRoadSectionSpawn = randomRoadSection(listIntersectionBody.get(0))
 			var randomRoadSectionDestination = randomRoadSection(listIntersectionBody.get(0))
+			while (randomRoadSectionSpawn == randomRoadSectionDestination) {
+				randomRoadSectionDestination = randomRoadSection(listIntersectionBody.get(0))
+			}
+			randomRoadSectionSpawn = listIntersectionBody.get(0).roadSections.get(1)
+			randomRoadSectionDestination = listIntersectionBody.get(0).roadSections.get(2)
+			
 			var carId = UUID.randomUUID 
 			var car = new CarBody(
 				carId,
@@ -160,7 +166,7 @@ agent Environment {
 			aRoadSection.waitingList.add(myCarBody)*/
 			listIntersectionBody.add(intersectionBody)
 
-			every(60000) [
+			every(3000) [
 				addRandomNumberOfCar(1, 1)
 			]
 			
@@ -250,6 +256,17 @@ agent Environment {
 			}
 		}
 		
+	}
+	
+	on leaveWaitingList{
+		synchronized (carBodies) {
+			for (intersection : this.listIntersectionBody) {
+				if (intersection.owner == occurrence.intersection) {
+					intersection.roadSections.get(occurrence.roadSectionPos).waitingList.remove(
+						this.carBodies.get(occurrence.car))
+				}
+			}
+		}
 	}
 
 	on CarDead {

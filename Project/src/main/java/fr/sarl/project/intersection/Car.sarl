@@ -76,29 +76,29 @@ agent Car
 		
 		
 		switch(roadSectionSpawn){
-			case 0:{
-				if(roadSectionDestination == 0) destination = 0 
+			case 1:{
+				if(roadSectionDestination == 1) destination = 0 
 				else if(roadSectionDestination == 2) destination = 1
-				else if(roadSectionDestination == 1) destination = 2
-				else if(roadSectionDestination == 3) destination = 3
-			}
-			case 1: {
-				if (roadSectionDestination == 0) destination = 1
-				else if (roadSectionDestination == 2)destination = 3
-				else if(roadSectionDestination == 1) destination = 0 
 				else if(roadSectionDestination == 3) destination = 2
-			}
-			case 2: {
-				if (roadSectionDestination == 0 )destination = 2
-				else if (roadSectionDestination == 2) destination = 0
-				else if(roadSectionDestination == 1) destination = 3
-				else if(roadSectionDestination ==3) destination = 1
+				else if(roadSectionDestination == 4) destination = 3
 			}
 			case 3: {
-				if (roadSectionDestination == 0) destination = 3
+				if (roadSectionDestination == 1) destination = 1
+				else if (roadSectionDestination == 2)destination = 3
+				else if(roadSectionDestination == 3) destination = 0 
+				else if(roadSectionDestination == 4) destination = 2
+			}
+			case 2: {
+				if (roadSectionDestination == 1 )destination = 2
+				else if (roadSectionDestination == 2) destination = 0
+				else if(roadSectionDestination == 3) destination = 3
+				else if(roadSectionDestination ==4) destination = 1
+			}
+			case 4: {
+				if (roadSectionDestination == 1) destination = 3
 				else if (roadSectionDestination == 2) destination = 2
-				else if(roadSectionDestination == 1) destination = 1
-				else if(roadSectionDestination ==3) destination = 0
+				else if(roadSectionDestination == 3) destination = 1
+				else if(roadSectionDestination ==4) destination = 0
 			}
 		}
 		
@@ -138,11 +138,13 @@ agent Car
 	
 	on Go {
 		
+		
+		info("***********************************")
 		// TODO Code for when the car can go
 		if (occurrence.carToFollow == null) {
 			canGo = true
 		}else{
-			
+			canGo =true
 		}
 		
 		
@@ -327,7 +329,7 @@ agent Car
 				}
 			
 		} else if(dir == 3){
-			//TODO GOTTA GO STRAIT (and fast)
+			//OK
 			
 		} else if(dir == 0){
 			//TODO
@@ -355,19 +357,30 @@ agent Car
 			
 			if (nextTo) {
 				cheminIntersection = traverserInter(this.destination)
+				
 			}
 		}
 			
 		if (nextTo) {
-			if (progressionIntersection < cheminIntersection.length) {
-				var point = cheminIntersection.get(progressionIntersection)
-				speed.setX(point.x - this.position.x)
-				speed.setY(point.y - this.position.y)
-				progressionIntersection++
+			if (destination ==3){
+				
 			} else {
-			
-		
+				if (progressionIntersection < cheminIntersection.length) {
+					var point = cheminIntersection.get(progressionIntersection)
+					speed.setX(point.x - this.position.x)
+					speed.setY(point.y - this.position.y)
+					progressionIntersection++
+
+					if (progressionIntersection == 1) {
+						emit(new leaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
+							it.UUID == this.environment
+						]
+					}
+				} else {
+				}
+				
 			}
+			
 		} else if (frontCar !== null) {
 				// info(body.direction)
 			if (frontCar.direction == this.direction) {
@@ -425,44 +438,48 @@ agent Car
 				}
 			}
 		}
-
-		switch (this.direction) {
-			case 0: {
-				if (this.position.y >= (400.0 - 20.0)) {
-					if (distance > 20.0)
-						distance = 20.0
-				}
-				}
-			case 1: {
-				if (this.position.x <= (600.0 + 20.0)) {
-					if (distance > 20.0)
-						distance = 20.0
-				}
-			}
-				case 2: {
-				if (this.position.x >= (400.0 - 20.0)) {
-					if (distance > 20.0)
-						distance = 20.0
-				}
-			}
-			case 3: {
-				if (this.position.y <= (600.0 + 20.0)) {
-					if (distance > 20.0)
-						distance = 20.0
+		if (!nextTo) {
+			switch (this.direction) {
+				case 0: {
+					if (this.position.y >= (400.0 - 20.0)) {
+						if (distance > 20.0)
+							distance = 20.0
 					}
+				}
+				case 1: {
+					if (this.position.x <= (600.0 + 20.0)) {
+						if (distance > 20.0)
+							distance = 20.0
+					}
+				}
+				case 2: {
+					if (this.position.x >= (400.0 - 20.0)) {
+						if (distance > 20.0)
+							distance = 20.0
+					}
+				}
+				case 3: {
+					if (this.position.y <= (600.0 + 20.0)) {
+						if (distance > 20.0)
+							distance = 20.0
+					}
+				}
 			}
-		}
+		
+		
 		
 
-		if ((distance as int) < 100 && (distance as int ) > 0) {
-			decceleration()
-
-		} else {
-			// info("*********************on call acc car*********************")
+			if ((distance as int) < 100 && (distance as int ) > 0) {
+				decceleration()
+		
+			} else {
+				// info("*********************on call acc car*********************")
+				acceleration()
+		
+			}
+		}else if(destination == 3){
 			acceleration()
-
 		}
-		
 		return this.speed
 
 	}

@@ -11,6 +11,19 @@ event Die
 
 event Wait
 
+event leaveWaitingList {
+	var roadSectionPos : int
+	var intersection : UUID
+	var car : UUID
+	
+	new (roadSectionPos : int, car : UUID,intersection : UUID){
+		
+		this.roadSectionPos = roadSectionPos
+		this.car = car
+		this.intersection = intersection
+	}
+}
+
 event Go {
 	var carToFollow : UUID
 	

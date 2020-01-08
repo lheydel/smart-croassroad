@@ -336,6 +336,7 @@ agent Intersection {
 			}
 		}
 	}
+	
 
 	/** 
 	 * Remove a given car from the lists of known entities
