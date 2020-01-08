@@ -165,7 +165,7 @@ agent Environment {
 			listIntersectionBody.add(intersectionBody)
 
 			every(3000) [
-				addRandomNumberOfCar(1, 3)
+				addRandomNumberOfCar(1, 5)
 			]
 			
 			this.myGUI = new EnvironmentGui(defaultSpace as OpenEventSpace, height, width, this.listIntersectionBody)

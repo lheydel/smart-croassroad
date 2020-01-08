@@ -19,6 +19,8 @@ import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 
+event NextTurn
+
 agent Intersection {
 	uses Logging, Lifecycle, Schedules, DefaultContextInteractions
 	
@@ -43,7 +45,7 @@ agent Intersection {
 	var initialized = false
 	
 	val MAX_FOLLOW = 3  	 // maximum number of cars allowed to follow another one
-	val MAX_WAIT = 30000   // maximum waiting time in ms before being prioritized
+	val MAX_WAIT = 10000   // maximum waiting time in ms before being prioritized
 	
 	// stats
 	var totalWaitingTime : double = 0
@@ -66,7 +68,11 @@ agent Intersection {
 		initialized = true
 		info("Intersection created")
 		
-		every(500) [
+		nextTurn
+	}
+	
+	on NextTurn {
+		in(300) [
 			manageCrossroad
 		]
 	}
@@ -90,9 +96,9 @@ agent Intersection {
 			var car = waitingCars.poll
 
 			// if someone else has the priority on the path, stop			
-			if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
+			/*if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
 				break;
-			} // else
+			} // else*/
 
 			synchronized (crossingSquareReservations) { 
 				
@@ -127,6 +133,12 @@ agent Intersection {
 				}
 			}
 		}
+		
+		nextTurn
+	}
+	
+	def nextTurn() {
+		new NextTurn().emit[it.UUID == ID]
 	}
 	
 	/**
@@ -251,7 +263,6 @@ agent Intersection {
 			val reservation = crossingSquares.get(square)
 			if (reservation !== null && reservation.equals(reserver)) {
 				crossingSquares.set(square, null)
-				info("square freed")
 			}
 		}
 	}
