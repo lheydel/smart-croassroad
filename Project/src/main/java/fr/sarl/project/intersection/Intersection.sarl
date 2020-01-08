@@ -244,6 +244,10 @@ agent Intersection {
 	 * Unlock a crossing square if it's reserved by a given reserver
 	 */
 	def unlockSquare(square : int, reserver : UUID, crossingSquares : UUID[]) {
+		if (square < 0) {
+			return
+		}
+		
 		synchronized (crossingSquares) {
 			if (crossingSquares.get(square) === reserver) {
 				crossingSquares.set(square, null)

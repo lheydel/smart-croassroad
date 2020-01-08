@@ -176,7 +176,7 @@ agent Car
 		//if there is, manage decceleration to stop before iter
 		// Update postion
 		//info(this.position + " || " + speed + " || " + direction)
-		new UpdatePosition(this.ID, this.position)
+		new UpdatePosition(this.ID, this.position).emit
 	}
 
 		
