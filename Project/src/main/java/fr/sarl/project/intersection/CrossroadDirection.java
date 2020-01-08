@@ -8,7 +8,7 @@ public enum CrossroadDirection {
 
 		@Override
 		public int[] toNorth(int nw, int ne, int se, int sw) {
-			int[] path = {nw, ne, se, sw}; // I got an error when doing "return {nw, ne}"
+			int[] path = {nw, sw, se, ne}; // I got an error when doing "return {nw, ne}"
 			return path;
 		}
 		
@@ -41,7 +41,7 @@ public enum CrossroadDirection {
 
 		@Override
 		public int[] toSouth(int nw, int ne, int se, int sw) {
-			int[] path = {nw, ne, se, sw}; 
+			int[] path = {se, ne, nw, sw}; 
 			return path;
 		}
 		
@@ -74,7 +74,7 @@ public enum CrossroadDirection {
 
 		@Override
 		public int[] toEast(int nw, int ne, int se, int sw) {
-			int[] path = {nw, ne, se, sw}; 
+			int[] path = {ne, nw, sw, se}; 
 			return path;
 		}
 		
@@ -107,7 +107,7 @@ public enum CrossroadDirection {
 
 		@Override
 		public int[] toWest(int nw, int ne, int se, int sw) {
-			int[] path = {nw, ne, se, sw}; 
+			int[] path = {sw, se, ne, nw}; 
 			return path;
 		}
 	};
