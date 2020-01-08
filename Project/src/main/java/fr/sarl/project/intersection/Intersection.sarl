@@ -91,9 +91,9 @@ agent Intersection {
 			var car = waitingCars.poll
 
 			// if someone has the priority on the path, stop			
-			if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
+			/*if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
 				break;
-			} // else
+			} // else*/
 
 			synchronized (crossingSquareReservations) { 
 				
@@ -249,8 +249,10 @@ agent Intersection {
 		}
 		
 		synchronized (crossingSquares) {
-			if (crossingSquares.get(square) === reserver) {
+			val reservation = crossingSquares.get(square)
+			if (reservation !== null && reservation.equals(reserver)) {
 				crossingSquares.set(square, null)
+				info("square freed")
 			}
 		}
 	}
@@ -303,7 +305,7 @@ agent Intersection {
 		}
 		
 		// compute the crossing path of the car
-		car.crossingPath = findPath(car.enteringRoadSection, car.targetRoadSection)
+		car.setPath(findPath(car.enteringRoadSection, car.targetRoadSection))
 		car.initialized = true
 	}
 	
@@ -329,15 +331,18 @@ agent Intersection {
 			
 			// if car is crossing, check current crossing square and unlock path if possible
 			var currentSquare = positionToCrossingSquare(car.position)
-			if (car.isGoing && currentSquare !== car.currentCrossingSquare) {
-				unlockSquare(car.currentCrossingSquare, car.id, crossingSquareReservations)
-				car.currentCrossingSquare = currentSquare
+			if (car.isGoing) {
+				
+				if (currentSquare < 0) {
+					val passedPath = car.updatePath(currentSquare)
+					unlockPath(passedPath, car.id, crossingSquareReservations)	
+				}
 				
 				// outside of intersection center --> has leaved the intersection
-				if (currentSquare === -1) {
+				if (car.pathLeft.size === 0) {
 					leaveIntersection(car)
 				}
-			}
+			} 
 		}
 	}
 	
@@ -394,8 +399,11 @@ agent Intersection {
 		@Accessors
 		var isGoing : boolean
 		
-		@Accessors
-		var currentCrossingSquare : int
+		//@Accessors
+		//var currentCrossingSquare : int
+		
+		// the part of the path still not passed
+		var pathLeft : int[]
 		
 		@Accessors
 		var initialized : boolean
@@ -407,12 +415,28 @@ agent Intersection {
 			this.enteringRoadSection = roadSection
 			this.targetRoadSection = target
 			this.isGoing = false
-			this.currentCrossingSquare = -1
+			//this.currentCrossingSquare = -1
 			this.initialized = false
 		}
 	
 		def compareTo(otherCar : PerceivedCar) : int {
 			return enteringTime.compareTo(otherCar.enteringTime)
+		}
+		
+		def setPath(path : int[]) {
+			crossingPath = path
+			pathLeft = path.clone
+		}
+		
+		def updatePath(currentSquare : int) : int[] {
+			val iSquare = pathLeft.indexOf(currentSquare)
+			
+			if (iSquare <= 0) {
+				return #[]
+			}
+			
+			pathLeft = pathLeft.drop(iSquare)
+			return crossingPath.subList(0, iSquare - 1)
 		}
 	}
 }

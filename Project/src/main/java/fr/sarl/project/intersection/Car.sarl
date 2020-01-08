@@ -149,7 +149,7 @@ agent Car
 		
 		
 		// Update postion
-		new UpdatePosition(this.ID,this.position).emit[it.UUID == this.intersection]
+		//new UpdatePosition(this.ID,this.position).emit[it.UUID == this.intersection]
 		
 	}
 	on Perception{
