@@ -12,13 +12,13 @@ event Die
 event Wait
 
 event leaveWaitingList {
-	var roadSectionPos : int
+	var roadSection : int
 	var intersection : UUID
 	var car : UUID
 	
-	new (roadSectionPos : int, car : UUID,intersection : UUID){
+	new (roadSection : int, car : UUID,intersection : UUID){
 		
-		this.roadSectionPos = roadSectionPos
+		this.roadSection = roadSection
 		this.car = car
 		this.intersection = intersection
 	}
