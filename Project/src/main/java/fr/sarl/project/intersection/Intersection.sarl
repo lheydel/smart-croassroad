@@ -19,7 +19,6 @@ import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 
-
 agent Intersection {
 	uses Logging, Lifecycle, Schedules, DefaultContextInteractions
 	
@@ -90,7 +89,7 @@ agent Intersection {
 		while (waitingCars.peek !== null) {
 			var car = waitingCars.poll
 
-			// if someone has the priority on the path, stop			
+			// if someone else has the priority on the path, stop			
 			/*if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
 				break;
 			} // else*/
@@ -333,10 +332,8 @@ agent Intersection {
 			var currentSquare = positionToCrossingSquare(car.position)
 			if (car.isGoing) {
 				
-				if (currentSquare < 0) {
-					val passedPath = car.updatePath(currentSquare)
-					unlockPath(passedPath, car.id, crossingSquareReservations)	
-				}
+				val passedPath = car.updatePath(currentSquare)
+				unlockPath(passedPath, car.id, crossingSquareReservations)
 				
 				// outside of intersection center --> has leaved the intersection
 				if (car.pathLeft.size === 0) {
@@ -398,9 +395,7 @@ agent Intersection {
 
 		@Accessors
 		var isGoing : boolean
-		
-		//@Accessors
-		//var currentCrossingSquare : int
+		var isCrossing : boolean
 		
 		// the part of the path still not passed
 		var pathLeft : int[]
@@ -415,7 +410,7 @@ agent Intersection {
 			this.enteringRoadSection = roadSection
 			this.targetRoadSection = target
 			this.isGoing = false
-			//this.currentCrossingSquare = -1
+			this.isCrossing = false
 			this.initialized = false
 		}
 	
@@ -424,19 +419,23 @@ agent Intersection {
 		}
 		
 		def setPath(path : int[]) {
-			crossingPath = path
+			crossingPath =  path
 			pathLeft = path.clone
 		}
 		
 		def updatePath(currentSquare : int) : int[] {
-			val iSquare = pathLeft.indexOf(currentSquare)
+			var iSquare = pathLeft.indexOf(currentSquare)
 			
 			if (iSquare <= 0) {
-				return #[]
+				if(!isCrossing) {
+					return #[]
+				}
+				iSquare = crossingPath.length
 			}
 			
+			isCrossing = true
 			pathLeft = pathLeft.drop(iSquare)
-			return crossingPath.subList(0, iSquare - 1)
+			return crossingPath.subList(0, iSquare)
 		}
 	}
 }
