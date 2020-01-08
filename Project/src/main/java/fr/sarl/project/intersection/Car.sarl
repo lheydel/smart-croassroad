@@ -6,15 +6,14 @@ package fr.sarl.project.intersection
 import io.sarl.core.DefaultContextInteractions
 import io.sarl.core.Destroy
 import io.sarl.core.Initialize
+import io.sarl.core.InnerContextAccess
 import io.sarl.core.Lifecycle
 import io.sarl.core.Logging
 import io.sarl.core.Schedules
-import java.util.Collection
 import java.util.UUID
 import org.arakhne.afc.math.geometry.d2.d.Path2d
-import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.arakhne.afc.math.geometry.d2.d.Point2d
-import io.sarl.core.InnerContextAccess
+import org.arakhne.afc.math.geometry.d2.d.Vector2d
 
 /** 
  * @author ASaunier
@@ -101,8 +100,8 @@ agent Car
 		}
 		
 		
-		info("Car : " + this.ID + " was started.")
-		info("at init " + this.position + " || " + speed + " || " + direction)
+		//info("Car : " + this.ID + " was started.")
+		//info("at init " + this.position + " || " + speed + " || " + direction)
 		val waitTask = task("waiting_to_die")
 		waitTask.every(100) [
 			waitTask.cancel
@@ -216,7 +215,7 @@ agent Car
 	on Die
 	{
 		new CarDead().emit[it.UUID == environment]
-		emit(new leaveLeavingList(this.roadSectionSpawn, this.ID, this.intersection)) [
+		emit(new LeaveLeavingList(this.roadSectionSpawn, this.ID, this.intersection)) [
 			it.UUID == this.environment
 		]
 		info("Agent car : " + this.ID + " stopped by the environment")
@@ -477,7 +476,7 @@ agent Car
 				//cheminIntersection
 				if (destination == 3) {
 
-					emit(new leaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
+					emit(new LeaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
 						it.UUID == this.environment
 					]
 				} else {
@@ -529,7 +528,7 @@ agent Car
 					acceleration()
 
 					if (progressionIntersection == 0) {
-						emit(new leaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
+						emit(new LeaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
 							it.UUID == this.environment
 						]
 						progressionIntersection++	

@@ -3,7 +3,6 @@ package fr.sarl.project.intersection
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 
@@ -11,7 +10,7 @@ event Die
 
 event Wait
 
-event leaveWaitingList {
+event LeaveWaitingList {
 	var roadSection : int
 	var intersection : UUID
 	var car : UUID
@@ -24,7 +23,7 @@ event leaveWaitingList {
 	}
 }
 
-event leaveLeavingList {
+event LeaveLeavingList {
 	var roadSection : int
 	var intersection : UUID
 	var car : UUID
