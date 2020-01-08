@@ -58,7 +58,7 @@ public enum CrossroadDirection {
 		}
 	},
 	
-	EAST(2) {
+	EAST(1) {
 
 		@Override
 		public int[] toNorth(int nw, int ne, int se, int sw) {
@@ -85,7 +85,7 @@ public enum CrossroadDirection {
 		}
 	},
 	
-	WEST(1) {
+	WEST(2) {
 
 		@Override
 		public int[] toNorth(int nw, int ne, int se, int sw) {
