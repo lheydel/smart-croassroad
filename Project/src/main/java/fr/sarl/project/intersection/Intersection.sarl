@@ -42,7 +42,7 @@ agent Intersection {
 	
 	var initialized = false
 	
-	val MAX_FOLLOW = 3  // maximum number of cars allowed to follow another one
+	val MAX_FOLLOW = 3  	 // maximum number of cars allowed to follow another one
 	val MAX_WAIT = 30000   // maximum waiting time in ms before being prioritized
 	
 	// stats
@@ -90,9 +90,9 @@ agent Intersection {
 			var car = waitingCars.poll
 
 			// if someone else has the priority on the path, stop			
-			/*if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
+			if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
 				break;
-			} // else*/
+			} // else
 
 			synchronized (crossingSquareReservations) { 
 				
@@ -351,7 +351,7 @@ agent Intersection {
 		// stats
 		totalWaitingTime += new Date().getTime() - car.enteringTime
 		totalFinishedCars++
-		new UpdateTimer(totalWaitingTime / totalFinishedCars).emit
+		new UpdateTimer((totalWaitingTime / totalFinishedCars) / 1000).emit
 		
 		// remove the car from the storage
 		synchronized (cars) {
@@ -426,7 +426,7 @@ agent Intersection {
 		def updatePath(currentSquare : int) : int[] {
 			var iSquare = pathLeft.indexOf(currentSquare)
 			
-			if (iSquare <= 0) {
+			if (iSquare < 0) {
 				if(!isCrossing) {
 					return #[]
 				}
