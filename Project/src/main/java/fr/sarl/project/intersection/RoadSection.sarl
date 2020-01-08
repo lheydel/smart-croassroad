@@ -24,6 +24,9 @@ class RoadSection extends Object
 	
 	@Accessors
 	var waitingList : ArrayList<CarBody>
+
+	@Accessors
+	var leavingList : ArrayList<CarBody>
 	
 	@Accessors
 	var width : int // Width of the road section (THE HALF THAT IS USEFUL)
@@ -41,6 +44,8 @@ class RoadSection extends Object
 		this.positionSouthEast = new Vector2d(-1, -1)
 		
 		this.waitingList = newArrayList
+
+		this.leavingList = newArrayList
 		
 		this.width = -1
 		
@@ -56,6 +61,7 @@ class RoadSection extends Object
 		this.positionSouthEast = posSE
 		
 		this.waitingList = c
+		this.leavingList = newArrayList
 		
 		this.width = w
 		this.length = l
@@ -271,6 +277,9 @@ class RoadSection extends Object
 		
 		return exitPoint
 		
+	}
+	def removeCarFromWaitingList(car : CarBody){
+		this.waitingList.remove(car)
 	}
 
 }

@@ -239,6 +239,18 @@ agent Environment {
 						val carId = car.owner
 						new Perception(car, roadSection.waitingList.get(i - 1)).emit[it.UUID == carId]
 					}
+
+					if (roadSection.leavingList.size > 0) {
+						car = roadSection.leavingList.get(0)
+						val carId = car.owner
+						new Perception(car, null).emit[it.UUID == carId]
+					}
+
+					for (var i : int = 1; i < roadSection.leavingList.size; i++) {
+						car = roadSection.leavingList.get(i)
+						val carId = car.owner
+						new Perception(car, roadSection.leavingList.get(i - 1)).emit[it.UUID == carId]
+					}
 				}
 			}
 		}
@@ -260,10 +272,17 @@ agent Environment {
 	
 	on leaveWaitingList{
 		synchronized (carBodies) {
-			for (intersection : this.listIntersectionBody) {
-				if (intersection.owner == occurrence.intersection) {
-					intersection.roadSections.get(occurrence.roadSectionPos).waitingList.remove(
-						this.carBodies.get(occurrence.car))
+			synchronized (listIntersectionBody) {
+				for (intersection : this.listIntersectionBody) {
+					if (intersection.owner == occurrence.intersection) {
+						for(roadSection : intersection.roadSections){
+							if (roadSection.numSection == occurrence.roadSection) {
+								roadSection.removeCarFromWaitingList(this.carBodies.get(occurrence.car))
+								roadSection.leavingList.add(this.carBodies.get(occurrence.car))
+							}
+						}
+						
+					}
 				}
 			}
 		}
