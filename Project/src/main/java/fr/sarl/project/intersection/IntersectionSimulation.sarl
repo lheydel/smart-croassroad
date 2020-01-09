@@ -29,10 +29,7 @@ import io.sarl.lang.core.Event
 import io.sarl.lang.core.EventListener
 import java.util.UUID
 
-/** 
- * The boids simulation launching the SARL environment with the corresponding agent and ensuring the communication between agents and the GUI
- * @author Nicolas Gaud
- */
+
 class IntersectionSimulation implements EventListener {
 
 	public static val id = UUID::randomUUID

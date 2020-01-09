@@ -15,10 +15,6 @@ import org.arakhne.afc.math.geometry.d2.d.Vector2d
 import org.eclipse.xtend.lib.annotations.Accessors
 import java.util.concurrent.ConcurrentHashMap
 
-/** 
- * The environmental agent in charge of collecting cars influences and computing the new state of the virtual world
- * @author Nicolas Gaud
- */
 agent Environment {
 
 	uses Logging, DefaultContextInteractions, Schedules, Lifecycle
@@ -65,12 +61,9 @@ agent Environment {
 		
 		for (var i = 0; i < alea; i++)
 		{
-			//var spawnOuest = listIntersectionBody.get(0).roadSections.get(3)
 			var randomRoadSectionSpawn = randomRoadSection(listIntersectionBody.get(0))
 			var randomRoadSectionDestination = randomRoadSection(listIntersectionBody.get(0))
-			while (randomRoadSectionSpawn == randomRoadSectionDestination) {
-				randomRoadSectionDestination = randomRoadSection(listIntersectionBody.get(0))
-			}
+
 			
 			var carId = UUID.randomUUID 
 			var car = new CarBody(
@@ -89,8 +82,6 @@ agent Environment {
 					carBodies.put(carId, car)	
 				}
 				
-				//listCarBody.add(car)
-				// randomRoadSectionSpawn.waitingList.add(car)
 				randomRoadSectionSpawn.waitingList.add(car)				
 			}
 			
@@ -112,15 +103,6 @@ agent Environment {
 		return intersectionBody.roadSections.get(rand)
 	}
 	
-	/*def addCarInRoadSection(c : Car,roadSection : RoadSection)
-	{
-		var sPoint = roadSection.spawnPoint
-		if(sPoint !== null)
-		{
-			// 	new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
-			var car : CarBody = new CarBody(c.ID, sPoint, roadSection.numSection,new Vector2d(2,2))	
-		}
-	}*/
 
 	on Initialize 
 	{
@@ -154,18 +136,11 @@ agent Environment {
 			
 			population.maxAcc = 1.0
 			population.maxSpeed = 5.0
-			
-			/*var myCar =kernel.startAgent(typeof(Car))
-			// new(owner : UUID, position : Vector2d, roadSection : int, speed : Vector2d)
-			var aRoadSection = intersectionBody.roadSections.get(0)
-			var myCarBody = new CarBody(myCar, aRoadSection.spawnPoint, aRoadSection.numSection,
-				new Vector2d(0,2))
-				
-			aRoadSection.waitingList.add(myCarBody)*/
+	
 			listIntersectionBody.add(intersectionBody)
 
 			every(3000) [
-				addRandomNumberOfCar(1, 5)
+				addRandomNumberOfCar(1, 4)
 			]
 			
 			this.myGUI = new EnvironmentGui(defaultSpace as OpenEventSpace, height, width, this.listIntersectionBody)
@@ -176,8 +151,6 @@ agent Environment {
 			
 			
 			myGUI.repaint
-			
-			//emit(new Start(carBodies))[it.UUID == this.ID]
 			
 		}
 	}
