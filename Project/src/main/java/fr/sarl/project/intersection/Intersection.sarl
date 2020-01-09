@@ -97,8 +97,6 @@ agent Intersection {
 
 			// if someone else has the priority on the path, stop			
 			if (!isPathFree(car.crossingPath, car.id, crossingSquarePrioReservations)) {
-				info("[" + waitingCars.toList.map[c | c.id].join(", ") + "]")
-				info("[" + crossingSquarePrioReservations.toList.map[a | a].join(", ") + "]")
 				continue;
 			} // else
 

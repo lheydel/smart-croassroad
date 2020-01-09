@@ -194,13 +194,11 @@ agent Environment {
 
 	on Action 
 	{
-		// TODO
 		synchronized (carBodies) {
 			synchronized (influences) { // Two very important "synchronized" blocks that prevent the simulation from thread interblocking
 				if (carBodies.containsKey(occurrence.source.UUID)) {
 					this.influences.add(occurrence.source.UUID)
 					
-					//TODO
 					applySpeed(occurrence.influence, carBodies.get(occurrence.source.UUID), occurrence.direction)
 				}
 				synchronized (influencesNeeded) {

@@ -186,9 +186,6 @@ agent Car
 			emit(new Action(think(frontCar), this.direction))[it.UUID == this.environment]
 			
 
-			if (Settings::isLogActivated) {
-				info("Sending Influences.")
-			}
 		]
 		// Inform the intersection of the new position of the car
 		new UpdatePosition(this.ID, this.position).emit
@@ -432,7 +429,6 @@ agent Car
 						(point.y - this.position.y) < 10 && (point.y - this.position.y) > -10 &&
 						progressionIntersection > 0)
 						{
-							info("pos between acceptable range")
 							if (destination == 1 && progressionIntersection < cheminIntersection.length - 1 &&
 								progressionIntersection >= 1) {
 								switch (this.direction) {
