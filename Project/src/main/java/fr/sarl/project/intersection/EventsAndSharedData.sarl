@@ -8,8 +8,6 @@ import org.eclipse.xtend.lib.annotations.Accessors
 
 event Die
 
-event Wait
-
 event LeaveWaitingList {
 	var roadSection : int
 	var intersection : UUID
