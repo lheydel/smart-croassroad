@@ -71,7 +71,7 @@ agent Car
 		roadSectionDestination = occurrence.parameters.get(6) as Integer
 		speed = new Vector2d(0, 0)
 		
-		
+		// Determine where the car is going
 		switch(roadSectionSpawn){
 			case 1:{ // From North
 				if(roadSectionDestination == 1) destination = 0 // Going back
@@ -100,15 +100,15 @@ agent Car
 		}
 		
 		
-		//info("Car : " + this.ID + " was started.")
-		//info("at init " + this.position + " || " + speed + " || " + direction)
-		val waitTask = task("waiting_to_die")
+		val waitTask = task("spawn wait")
 		waitTask.every(100) [
 			waitTask.cancel
 		]
 		
+		// inform the environment that the car is ready
 		new CarReady().emit[it.UUID == environment]
-		
+
+		// inform the intersection that the car is joining it
 		emit(new JoinIntersection(
 			this.ID,
 			position,
@@ -117,6 +117,9 @@ agent Car
 		))[it.UUID == intersection]
 	}
 	
+	/**
+	 *Define the direction of the car before crossing the intersection
+	 */
 	def setDirection() {
 		if (position.y >= 600) {
 			direction = 3
@@ -129,6 +132,9 @@ agent Car
 		}
 	}
 
+	/** 
+	 * Define the direction of the car atfer crossing the intersection
+	 */
 	def setDirectionExit {
 		if (position.y >= 600) {
 			direction = 0
@@ -148,33 +154,20 @@ agent Car
 		killMe
 	}
 	
-	
-	on Wait {
-		
-		//TODO Code for when the car need to wait
-		speed.set(0.0,0.0)
-		//TODO define a deceleration
-		
-	}	
-	
 	on Go {
-		
-		
-		info("***********************************")
-		// TODO Code for when the car can go
+		// the intersection agent inform the car that it can cross the intersection
 		if (occurrence.carToFollow == null) {
 			canGo = true
 		}else{
 			canGo =true
 		}
-		
-		
-		// Update postion
-		//new UpdatePosition(this.ID,this.position).emit[it.UUID == this.intersection]
-		
 	}
+	
 	on Perception{
-		// TODO 
+		
+		// list of carBody in the roadSection of the car sent by the environment
+		// to allow the car respond to send back his action
+		
 		var frontCar = occurrence.frontCarBody
 		var myBody = occurrence.carBody
 		if ((myBody !== null) && (myBody.owner == this.ID)) {
@@ -187,11 +180,9 @@ agent Car
 				case 2: if(position.x > 1100) emit(new Die)[it.UUID == this.ID]
 				case 3: if(position.y < -100) emit(new Die)[it.UUID == this.ID]
 			}
-			// Update postion
-			//new UpdatePosition(this.ID, this.position).emit[it.UUID == this.intersection]
 		}
 		
-		in(Settings::pause) [
+		in(Settings::pause) [ // Inform the intersection of the action the car want to do
 			emit(new Action(think(frontCar), this.direction))[it.UUID == this.environment]
 			
 
@@ -199,13 +190,7 @@ agent Car
 				info("Sending Influences.")
 			}
 		]
-		
-		//TODO Check if there is a car in front
-		
-		
-		//if there is, manage decceleration to stop before iter
-		// Update postion
-		//info(this.position + " || " + speed + " || " + direction)
+		// Inform the intersection of the new position of the car
 		new UpdatePosition(this.ID, this.position).emit
 	}
 
@@ -214,6 +199,7 @@ agent Car
 	
 	on Die
 	{
+		// inform the environment of the destruction of the car
 		new CarDead().emit[it.UUID == environment]
 		emit(new LeaveLeavingList(this.roadSectionSpawn, this.ID, this.intersection)) [
 			it.UUID == this.environment
@@ -221,16 +207,22 @@ agent Car
 		info("Agent car : " + this.ID + " stopped by the environment")
 		killMe
 	}
-
+	
+	
+	/**
+	 * Not Used Actually
+	 */
 	def follow(carToFollow : CarBody) : Vector2d {
 
 		if ((carToFollow !== null) && (carToFollow.owner != this.ID)) {
 			
-			//TODO Code for the car to follow another one
-			
 		}
 
 	}
+	
+	/**
+	 * Define the speed of the car and allow it to reach max speed
+	 */
 	def acceleration  {
 		//acceleration linéaire en fonction de la direction du véhicule 
 		
@@ -252,10 +244,11 @@ agent Car
 			}
 			else{
 			}
-			//info("*********************on acc car*********************")
-		
 	}
 
+	/**
+	 * Define the speed of the car and allow it to stop
+	 */
 	def decceleration {
 		// decceleration linéaire en fonction de la direction du véhicule
 		
@@ -269,15 +262,9 @@ agent Car
 			this.speed.setY(this.speed.getY + acceleration)
 		} else {
 		}
-		
-		//info("*********************on decc car*********************")
 	}
-	/*
-	 * dir 
-	 * [1] right
-	 * [2] left
-	 * [3] straight
-	 * return list of position for curved deplacement in intersection
+	/**
+	 * return list of position where the car need to change of direction
 	 */
 	def traverserInter(dest : int) {
 		var point = new Vector2d
@@ -286,51 +273,31 @@ agent Car
 		var courbe = new Path2d
 		courbe.moveTo(this.position.getX(), this.position.getY())
 		if (dest == 1) { // Go right
-			if (this.direction == 0) {
+			if (this.direction == 0) { // from North
 				point.setX(450)
 				point.setY(450)
 				cible.setX(this.vectorEndPoint.getX -50)
 				cible.setY(this.vectorEndPoint.getY)
-				//var q = new QuadPathElement2d(this.position.getX, this.position.getY, point.getX(),
-				//	point.getY(), cible.getX(), cible.getY())
-				//var a =new ArrayList()
-				//a.add(q)
-				//var i =a.iterator()
-				//courbe = new Path2d(i)
 				courbe.quadTo(point.getX(),
 						point.getY(), cible.getX(), cible.getY())
 				
 			}
-			if (this.direction == 1) {
-				/*point.setX(this.position.getX()+50)
-				point.setY(this.position.getY() )
-				cible.setX(this.position.getX()+50)
-				cible.setY(this.position.getY() - 50)*/
-				
+			if (this.direction == 1) { // from East
 				point.setX(550)
 				point.setY(450)
 				cible.setX(this.vectorEndPoint.getX)
 				cible.setY(this.vectorEndPoint.getY - 50)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
-				//courbe.curveTo()
-				
+
 				}
-			if (this.direction == 2) {
-//				point.setX(this.position.getX()-50)
-//				point.setY(this.position.getY() )
-//				cible.setX(this.position.getX()-50)
-				// cible.setY(this.position.getY() + 50)
+			if (this.direction == 2) { // from West
 				point.setX(450)
 				point.setY(550)
 				cible.setX(this.vectorEndPoint.getX)
 				cible.setY(this.vectorEndPoint.getY + 50)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 				}
-			if (this.direction == 3) {
-//				point.setX(this.position.getX())
-//				point.setY(this.position.getY() - 50)
-//				cible.setX(this.position.getX()-50)
-				// cible.setY(this.position.getY() - 50)
+			if (this.direction == 3) { // from South
 				point.setX(550)
 				point.setY(550)
 				cible.setX(this.vectorEndPoint.getX + 50)
@@ -340,30 +307,15 @@ agent Car
 			
 		} else if (dest == 2) { // Go left
 
-			if (this.direction == 0) {
-//				point.setX(this.position.getX())
-//				point.setY(this.position.getY() + 50)
-//				cible.setX(this.position.getX() - 50)
-				// cible.setY(this.position.getY() + 50)
+			if (this.direction == 0) { // from North
 				point.setX(450)
 				point.setY(550)
 				cible.setX(this.vectorEndPoint.getX + 50)
 				cible.setY(this.vectorEndPoint.getY)
-
-				// var q = new QuadPathElement2d(this.position.getX, this.position.getY, point.getX(),
-				//	point.getY(), cible.getX(), cible.getY())
-				// var a =new ArrayList()
-				// a.add(q)
-				// var i =a.iterator()
-				// courbe = new Path2d(i)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 
 			}
-			if (this.direction == 1) {
-//				point.setX(this.position.getX() + 50)
-//				point.setY(this.position.getY())
-//				cible.setX(this.position.getX() + 50)
-				// cible.setY(this.position.getY() + 50)
+			if (this.direction == 1) { // from East
 				point.setX(450)
 				point.setY(450)
 				cible.setX(this.vectorEndPoint.getX)
@@ -371,22 +323,14 @@ agent Car
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 
 			}
-			if (this.direction == 2) {
-//				point.setX(this.position.getX() - 50)
-//				point.setY(this.position.getY())
-//				cible.setX(this.position.getX() + 50)
-				// cible.setY(this.position.getY() - 50)
+			if (this.direction == 2) { // from West
 				point.setX(550)
 				point.setY(550)
 				cible.setX(this.vectorEndPoint.getX)
 				cible.setY(this.vectorEndPoint.getY - 50)
 				courbe.quadTo(point.getX(), point.getY(), cible.getX(), cible.getY())
 			}
-			if (this.direction == 3) {
-//				point.setX(this.position.getX())
-//				point.setY(this.position.getY() - 50)
-//				cible.setX(this.position.getX() - 50)
-				// cible.setY(this.position.getY() - 50)
+			if (this.direction == 3) { // from South
 				point.setX(550)
 				point.setY(450)
 				cible.setX(this.vectorEndPoint.getX - 50)
@@ -395,11 +339,7 @@ agent Car
 				}
 			
 		} else if (dest == 0) { // turn back
-			if (this.direction == 0) {
-				// point.setX(this.position.getX() - 50)
-				// point.setY(this.position.getY())
-				// cible.setX(this.position.getX() + 50)
-				// cible.setY(this.position.getY() - 50)
+			if (this.direction == 0) { // from North
 				point.setX(450)
 				point.setY(550)
 				point2.setX(550)
@@ -408,11 +348,7 @@ agent Car
 				cible.setY(this.vectorEndPoint.getY - 50)
 				courbe.curveTo(point.getX(), point.getY(), point2.getX(), point2.getY(), cible.getX(), cible.getY())
 			}
-			if (this.direction == 1) {
-				// point.setX(this.position.getX() + 50)
-				// point.setY(this.position.getY())
-				// cible.setX(this.position.getX() + 50)
-				// cible.setY(this.position.getY() + 50)
+			if (this.direction == 1) { // from East
 				point.setX(450)
 				point.setY(450)
 				point2.setX(450)
@@ -422,11 +358,7 @@ agent Car
 				courbe.curveTo(point.getX(), point.getY(), point2.getX(), point2.getY(), cible.getX(), cible.getY())
 
 			}
-			if (this.direction == 2) {
-				// point.setX(this.position.getX() - 50)
-				// point.setY(this.position.getY())
-				// cible.setX(this.position.getX() + 50)
-				// cible.setY(this.position.getY() - 50)
+			if (this.direction == 2) { // from West
 				point.setX(550)
 				point.setY(550)
 				point2.setX(550)
@@ -435,11 +367,7 @@ agent Car
 				cible.setY(this.vectorEndPoint.getY)
 				courbe.curveTo(point.getX(), point.getY(), point2.getX(), point2.getY(), cible.getX(), cible.getY())
 			}
-			if (this.direction == 3) {
-				// point.setX(this.position.getX())
-				// point.setY(this.position.getY() - 50)
-				// cible.setX(this.position.getX() - 50)
-				// cible.setY(this.position.getY() - 50)
+			if (this.direction == 3) { // from South
 				point.setX(550)
 				point.setY(450)
 				point2.setX(450)
@@ -456,9 +384,11 @@ agent Car
 	}
 	
 	
-
+	/**
+	 * Define the content of the action to send to the environment
+	 */
 	def think(frontCar : CarBody) : Vector2d {
-
+		
 		var distance = 101.0
 		
 		if(canGo && !nextTo){
@@ -473,9 +403,8 @@ agent Car
 			
 			if (nextTo) {
 				
-				//cheminIntersection
-				if (destination == 3) {
-
+				if (destination == 3) { //if going strait
+					// declare leaving the waiting list of his current roadSection
 					emit(new LeaveWaitingList(this.roadSectionSpawn, this.ID, this.intersection)) [
 						it.UUID == this.environment
 					]
@@ -523,8 +452,6 @@ agent Car
 							}
 						progressionIntersection++							
 					}
-//					speed.setX(point.x - this.position.x)
-					// speed.setY(point.y - this.position.y)
 					acceleration()
 
 					if (progressionIntersection == 0) {
@@ -548,16 +475,13 @@ agent Car
 			}
 			
 		} else if (frontCar !== null) {
-				// info(body.direction)
 			if (frontCar.direction == this.direction) {
-				// info("*********************on think car in front*********************")
 				switch (this.direction) {
 					case 0: {
 						// if on same line and too close
 						if (frontCar.position.getX as int == this.position.getX as int &&
-							((frontCar.position.getY - this.position.getY) as int) <= 75 && // body.position.getY - this.position.getY < distance &&
+							((frontCar.position.getY - this.position.getY) as int) <= 75 &&
 						((frontCar.position.getY - this.position.getY) as int) != 0) {
-						// info("***********" + (body.position.getY - this.position.getY) + "*****")
 							distance = frontCar.position.getY - this.position.getY
 						}
 						if (this.position.y >= (400.0 - 20.0)) {
@@ -567,7 +491,6 @@ agent Car
 					case 1: {
 						if (frontCar.position.getY as int == this.position.getY as int &&
 							((frontCar.position.getX - this.position.getX) as int) >= -75 &&
-						// body.position.getX - this.position.getX * -1 < distance &&
 						((frontCar.position.getX - this.position.getX) as int) != 0) {
 							distance = (frontCar.position.getX - this.position.getX) * -1
 						}
@@ -578,7 +501,6 @@ agent Car
 					case 2: {
 						if (frontCar.position.getY as int == this.position.getY as int &&
 							((frontCar.position.getX - this.position.getX) as int) <= 75 &&
-						// body.position.getX - this.position.getX < distance &&
 						((frontCar.position.getX - this.position.getX) as int ) != 0) {
 
 							distance = (frontCar.position.getX - this.position.getX)
@@ -589,13 +511,10 @@ agent Car
 						}
 					}
 					case 3: {
-					//info( "*********************" +this.position.getX +" " + body.position.getX+" ********")
 						if (frontCar.position.getX as int == this.position.getX as int &&
 							((frontCar.position.getY - this.position.getY) as int) >= -75 &&
 							((frontCar.position.getY - this.position.getY) as int) != 0) {
-							// info("***********" + distance + "*****")
 							distance = ( frontCar.position.getY - this.position.getY) * -1
-								// info("***********" + distance + "*****")
 						}
 						if (this.position.y <= (600.0 + 20.0)) {
 							distance = 75.0
@@ -636,7 +555,6 @@ agent Car
 				decceleration()
 		
 			} else {
-				// info("*********************on call acc car*********************")
 				acceleration()
 		
 			}
