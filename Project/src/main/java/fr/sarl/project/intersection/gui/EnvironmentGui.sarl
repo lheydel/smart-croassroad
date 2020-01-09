@@ -76,11 +76,6 @@ class EnvironmentGui extends Frame {
 		this.visible = true
 	}
 
-/*
-	def setCars(intersections : ArrayList<IntersectionBody>) {
-		this.panel.cars = cars
-	}*/
-
 	override paint(g : Graphics) {
 		super.paint(g)
 		this.panel.timer = this.evtGuiTimer
@@ -215,10 +210,6 @@ package class EnvironmentGuiPanel extends Panel {
 				}
 			}
 
-			/* for (boid : boids.values) {
-			 * paintBoid(myCanvas, boid)
-			 * }
-			 */
 			myGraphics.drawImage(myImage, 0, 0, this)
 		}
 	}
@@ -274,7 +265,6 @@ package class EnvironmentGuiPanel extends Panel {
 	}
 
 	// Self explanatory
-	// We could get some inspiration from that to draw our cars
 	def paintCar(g : Graphics, car : CarBody) 
 	{
 		var posX = car.position.x as int
@@ -285,8 +275,6 @@ package class EnvironmentGuiPanel extends Panel {
 
 		g.color = Color.BLACK
 	
-
-		// g.drawLine(StartX,StartY,endX,EndY)
 
 		g.drawLine(posX + ( 15 * cos ) as int, posY + ( 15 * sin ) as int, posX - ( 12 * cos + 12 * sin ) as int,
 			posY - ( 12 * sin -12 * cos ) as int)
